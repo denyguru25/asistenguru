@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduSearch AI - Generator Perangkat Ajar & LKPD SD</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF7F0;
+    --ink:#1E2A3A;
+    --slate:#3E5C76;
+    --chalk-blue:#2B5DAA;
+    --chalk-blue-dark:#1D3F73;
+    --gold:#E0A72E;
+    --gold-dark:#B9821B;
+    --line:#D8CDB8;
+    --bg:#F3EFE4;
+  }
+  *{font-family:'Inter',sans-serif;}
+  .font-display{font-family:'Lexend',sans-serif;}
+  body{background:var(--bg);}
+  .bg-chalkboard{background:radial-gradient(ellipse at top, #234270 0%, #142238 60%, #0d1729 100%);}
+  .paper-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(30,42,58,0.04), 0 8px 24px -8px rgba(30,42,58,0.08);
+  }
+  .search-shell{
+    background:var(--paper);
+    border:2px solid var(--line);
+    transition: box-shadow .2s ease, border-color .2s ease;
+  }
+  .search-shell:focus-within{
+    border-color: var(--chalk-blue);
+    box-shadow: 0 0 0 4px rgba(43,93,170,0.12);
+  }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--chalk-blue) 0%, var(--chalk-blue-dark) 100%);
+    color:#fff;
+    box-shadow: 0 6px 16px -4px rgba(29,63,115,0.5);
+  }
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-primary:disabled{opacity:.6; cursor:not-allowed; filter:none;}
+  .chip{
+    border:1.5px solid var(--line);
+    background:#fff;
+    transition: all .15s ease;
+    cursor:pointer;
+    user-select:none;
+  }
+  .chip input:checked ~ span, .chip.active{
+    background: var(--chalk-blue);
+    border-color: var(--chalk-blue);
+    color:#fff;
+  }
+  .chip:hover{border-color: var(--chalk-blue);}
+  .toggle-outer{width:46px;height:26px;background:#D8CDB8;border-radius:999px;position:relative;transition:.2s;flex-shrink:0;}
+  .toggle-outer.on{background:var(--chalk-blue);}
+  .toggle-dot{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .toggle-outer.on .toggle-dot{left:23px;}
+  .output-type-card{
+    border:2px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .output-type-card.active{
+    border-color: var(--gold-dark);
+    background: linear-gradient(135deg, #FFF7E6 0%, #FDF1DB 100%);
+    box-shadow: 0 4px 14px -4px rgba(185,130,27,0.35);
+  }
+  .spinner{
+    border: 3px solid rgba(43,93,170,.15);
+    border-top-color: var(--chalk-blue);
+    border-radius:50%;
+    width:20px;height:20px;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .prose-doc h1{font-family:'Lexend',sans-serif;font-weight:700;font-size:1.5rem;margin:1rem 0 .5rem;color:var(--ink);border-bottom:2px solid var(--line);padding-bottom:.4rem;}
+  .prose-doc h2{font-family:'Lexend',sans-serif;font-weight:700;font-size:1.2rem;margin:1.1rem 0 .5rem;color:var(--chalk-blue-dark);}
+  .prose-doc h3{font-family:'Lexend',sans-serif;font-weight:600;font-size:1.05rem;margin:.9rem 0 .4rem;color:var(--slate);}
+  .prose-doc p{margin:.5rem 0;line-height:1.75;color:var(--ink);}
+  .prose-doc ul{list-style:disc;padding-left:1.4rem;margin:.5rem 0;}
+  .prose-doc ol{list-style:decimal;padding-left:1.4rem;margin:.5rem 0;}
+  .prose-doc li{margin:.25rem 0;line-height:1.65;}
+  .prose-doc strong{font-weight:700;color:var(--ink);}
+  .prose-doc table{border-collapse:collapse;width:100%;margin:.8rem 0;font-size:.92rem;}
+  .prose-doc th,.prose-doc td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top;}
+  .prose-doc th{background:#EFE9D8;font-weight:700;font-family:'Lexend',sans-serif;}
+  .prose-doc hr{border-color:var(--line);margin:1.2rem 0;}
+  .scale-anim{animation: pop .18s ease-out;}
+  @keyframes pop{from{transform:scale(.97);opacity:.6}to{transform:scale(1);opacity:1}}
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{position:absolute;top:0;left:0;width:100%;padding:0;}
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- HEADER -->
+<header class="bg-chalkboard text-white sticky top-0 z-40 shadow-lg">
+  <div class="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-md flex-shrink-0">
+        <i class="fa-solid fa-graduation-cap text-white text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-display font-bold text-lg sm:text-xl leading-tight">EduSearch AI</h1>
+        <p class="text-[11px] sm:text-xs text-blue-100/70 -mt-0.5">Generator Perangkat Ajar & LKPD SD &middot; Kurikulum Merdeka</p>
+      </div>
+    </div>
+    <button onclick="openApiModal()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-2 rounded-lg text-sm font-medium transition">
+      <i class="fa-solid fa-key text-amber-300"></i>
+      <span class="hidden sm:inline">Pengaturan API Key</span>
+      <span id="apiStatusDot" class="w-2 h-2 rounded-full bg-red-400"></span>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="max-w-6xl mx-auto px-4 sm:px-5 py-8">
+
+  <!-- HERO / SEARCH LABEL -->
+  <div class="text-center mb-7">
+    <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-[color:var(--ink)]">Cari & Susun Perangkat Ajar dalam Sekejap</h2>
+    <p class="text-slate-500 mt-2 text-sm sm:text-base">Isi parameter pembelajaran seperti mencari referensi &mdash; AI akan menyusunkan dokumennya untuk Anda.</p>
+  </div>
+
+  <!-- SEARCH SHELL / FORM -->
+  <div class="search-shell rounded-2xl p-5 sm:p-7">
+
+    <!-- OUTPUT TYPE SELECTOR -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+      <div class="output-type-card active rounded-xl p-4 flex items-center gap-3" data-output="modul" onclick="selectOutput('modul')">
+        <i class="fa-solid fa-book-open text-xl text-[color:var(--chalk-blue-dark)]"></i>
+        <div>
+          <p class="font-display font-semibold text-sm text-[color:var(--ink)]">Modul Ajar / RPP</p>
+          <p class="text-[11px] text-slate-500">Kurikulum Merdeka</p>
+        </div>
+      </div>
+      <div class="output-type-card rounded-xl p-4 flex items-center gap-3" data-output="rangkuman" onclick="selectOutput('rangkuman')">
+        <i class="fa-solid fa-file-lines text-xl text-[color:var(--chalk-blue-dark)]"></i>
+        <div>
+          <p class="font-display font-semibold text-sm text-[color:var(--ink)]">Rangkuman / Materi</p>
+          <p class="text-[11px] text-slate-500">Bahan Ajar Ringkas</p>
+        </div>
+      </div>
+      <div class="output-type-card rounded-xl p-4 flex items-center gap-3" data-output="lkpd" onclick="selectOutput('lkpd')">
+        <i class="fa-solid fa-pencil text-xl text-[color:var(--chalk-blue-dark)]"></i>
+        <div>
+          <p class="font-display font-semibold text-sm text-[color:var(--ink)]">LKPD</p>
+          <p class="text-[11px] text-slate-500">Lembar Kerja Peserta Didik</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM GRID -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Mata Pelajaran</label>
+        <input list="mapelList" id="mapel" placeholder="Contoh: Matematika" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+        <datalist id="mapelList">
+          <option value="Matematika">
+          <option value="Bahasa Indonesia">
+          <option value="IPAS">
+          <option value="Pendidikan Pancasila">
+          <option value="PJOK">
+          <option value="Seni Budaya">
+          <option value="Bahasa Inggris">
+          <option value="Pendidikan Agama dan Budi Pekerti">
+        </datalist>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Kelas</label>
+        <select id="kelas" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+          <option value="1">Kelas 1</option>
+          <option value="2">Kelas 2</option>
+          <option value="3">Kelas 3</option>
+          <option value="4" selected>Kelas 4</option>
+          <option value="5">Kelas 5</option>
+          <option value="6">Kelas 6</option>
+        </select>
+      </div>
+      <div class="sm:col-span-2">
+        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Materi / Pokok Bahasan</label>
+        <input type="text" id="materi" placeholder="Contoh: Pecahan Senilai" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+      </div>
+      <div class="sm:col-span-2">
+        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Tujuan Pembelajaran (TP)</label>
+        <textarea id="tp" rows="3" placeholder="Tuliskan satu atau beberapa TP, boleh dipisah per baris. Contoh:&#10;1. Peserta didik dapat mengidentifikasi pecahan senilai&#10;2. Peserta didik dapat menyelesaikan soal pecahan senilai dalam kehidupan sehari-hari" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white resize-none"></textarea>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Alokasi Waktu (JP)</label>
+        <div class="mt-1 flex items-center gap-2">
+          <input type="number" id="jp" min="1" value="2" oninput="hitungMenit()" class="w-24 border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+          <span class="text-sm text-slate-500">JP</span>
+          <i class="fa-solid fa-arrow-right-long text-slate-300"></i>
+          <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <i class="fa-regular fa-clock text-amber-600 text-sm"></i>
+            <span class="text-sm font-semibold text-amber-800" id="menitLabel">70 menit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LKPD SUB SETTINGS -->
+    <div id="lkpdSettings" class="hidden mt-6 pt-6 border-t border-dashed border-[color:var(--line)]">
+      <p class="font-display font-semibold text-sm text-[color:var(--ink)] mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-sliders text-[color:var(--chalk-blue)]"></i> Pengaturan Khusus LKPD
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Jenis Soal</label>
+          <div class="mt-2 flex flex-wrap gap-2" id="jenisSoalGroup">
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Pilihan Ganda" checked><span>Pilihan Ganda</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Pilihan Ganda Kompleks"><span>PG Kompleks</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Menjodohkan"><span>Menjodohkan</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Isian Singkat / Essay" checked><span>Isian Singkat</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Uraian"><span>Uraian</span></label>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Tingkat Kesulitan</label>
+          <div class="mt-2 flex flex-wrap gap-2" id="kesulitanGroup">
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Mudah" checked><span>Mudah</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Sedang" checked><span>Sedang</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Sulit"><span>Sulit</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="HOTS"><span>HOTS</span></label>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Jumlah Soal</label>
+          <input type="number" id="jumlahSoal" min="1" value="10" class="mt-2 w-28 border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+        </div>
+        <div class="flex items-center">
+          <div class="flex items-center gap-3 mt-2 sm:mt-6">
+            <div class="toggle-outer on" id="kunciToggle" onclick="toggleKunci()"><div class="toggle-dot"></div></div>
+            <label class="text-sm text-slate-700 cursor-pointer" onclick="toggleKunci()">Sertakan Kunci Jawaban & Rubrik Penilaian</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GENERATE BUTTON -->
+    <div class="mt-7 flex flex-col sm:flex-row items-center gap-3">
+      <button id="generateBtn" onclick="generateContent()" class="btn-primary w-full sm:w-auto flex-1 rounded-xl px-6 py-4 font-display font-semibold text-base flex items-center justify-center gap-2.5">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span id="generateBtnText">Generasi Konten AI</span>
+        <span id="generateSpinner" class="spinner hidden"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULT PANEL -->
+  <div id="resultPanel" class="hidden mt-8">
+    <div class="paper-card rounded-2xl overflow-hidden">
+      <div class="bg-[color:var(--chalk-blue-dark)] px-5 py-3 flex items-center justify-between flex-wrap gap-2">
+        <p class="text-white font-display font-semibold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-file-circle-check text-amber-300"></i> Hasil Generasi
+        </p>
+        <div class="flex items-center gap-2">
+          <button onclick="copyText()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-regular fa-copy"></i> Salin Teks
+          </button>
+          <button onclick="downloadWord()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-file-word"></i> Unduh Word
+          </button>
+          <button onclick="printResult()" class="bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-print"></i> Cetak / PDF
+          </button>
+        </div>
+      </div>
+      <div id="printArea" class="p-6 sm:p-10 bg-white">
+        <div id="resultContent" class="prose-doc max-w-none"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="text-center text-xs text-slate-400 py-8">
+  EduSearch AI &middot; Dibangun untuk Guru SD Indonesia &middot; Ditenagai oleh Google Gemini
+</footer>
+
+<!-- API KEY MODAL -->
+<div id="apiModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl w-full max-w-md p-6 scale-anim">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-display font-bold text-lg text-[color:var(--ink)]"><i class="fa-solid fa-key text-amber-500 mr-2"></i>Pengaturan API Key</h3>
+      <button onclick="closeApiModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    <p class="text-sm text-slate-500 mb-3">Masukkan Google Gemini API Key Anda. Kunci disimpan hanya di browser ini (localStorage) dan tidak dikirim ke server manapun selain Google.</p>
+    <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)]">
+    <div class="flex items-center gap-2 mt-2">
+      <input type="checkbox" id="showKey" onclick="toggleShowKey()">
+      <label for="showKey" class="text-xs text-slate-500">Tampilkan karakter</label>
+    </div>
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-[color:var(--chalk-blue)] hover:underline flex items-center gap-1 mt-2">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i> Dapatkan API Key gratis di Google AI Studio
+    </a>
+    <button onclick="saveApiKey()" class="btn-primary w-full rounded-lg py-2.5 font-semibold text-sm mt-5">Simpan API Key</button>
+  </div>
+</div>
+
+<script>
+let selectedOutput = 'modul';
+const chipGroups = ['jenisSoalGroup','kesulitanGroup'];
+
+chipGroups.forEach(id=>{
+  document.getElementById(id).querySelectorAll('label.chip').forEach(lbl=>{
+    const cb = lbl.querySelector('input');
+    if(cb.checked) lbl.classList.add('active');
+    lbl.addEventListener('click', e=>{
+      e.preventDefault();
+      cb.checked = !cb.checked;
+      lbl.classList.toggle('active', cb.checked);
+    });
+  });
+});
+
+function selectOutput(type){
+  selectedOutput = type;
+  document.querySelectorAll('.output-type-card').forEach(el=>{
+    el.classList.toggle('active', el.dataset.output === type);
+  });
+  document.getElementById('lkpdSettings').classList.toggle('hidden', type !== 'lkpd');
+}
+
+function hitungMenit(){
+  const jp = parseFloat(document.getElementById('jp').value) || 0;
+  document.getElementById('menitLabel').textContent = (jp * 35) + ' menit';
+}
+hitungMenit();
+
+function toggleKunci(){
+  document.getElementById('kunciToggle').classList.toggle('on');
+}
+
+// ---------- API KEY HANDLING ----------
+function refreshApiStatus(){
+  const key = localStorage.getItem('gemini_api_key');
+  const dot = document.getElementById('apiStatusDot');
+  dot.classList.toggle('bg-red-400', !key);
+  dot.classList.toggle('bg-green-400', !!key);
+}
+function openApiModal(){
+  document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
+  document.getElementById('apiModal').classList.remove('hidden');
+}
+function closeApiModal(){ document.getElementById('apiModal').classList.add('hidden'); }
+function toggleShowKey(){
+  const inp = document.getElementById('apiKeyInput');
+  inp.type = document.getElementById('showKey').checked ? 'text' : 'password';
+}
+function saveApiKey(){
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if(!val){ alert('Mohon masukkan API Key yang valid.'); return; }
+  localStorage.setItem('gemini_api_key', val);
+  refreshApiStatus();
+  closeApiModal();
+}
+refreshApiStatus();
+
+// ---------- PROMPT BUILDER ----------
+function buildPrompt(){
+  const mapel = document.getElementById('mapel').value.trim() || '(belum diisi)';
+  const kelas = document.getElementById('kelas').value;
+  const materi = document.getElementById('materi').value.trim() || '(belum diisi)';
+  const tp = document.getElementById('tp').value.trim() || '(belum diisi)';
+  const jp = document.getElementById('jp').value || '1';
+  const menit = (parseFloat(jp)||0) * 35;
+
+  let sistem = `Anda adalah asisten AI ahli pendidikan dasar di Indonesia dengan pengalaman lebih dari 20 tahun sebagai pengembang kurikulum dan guru SD. Anda sangat menguasai standar Kurikulum Merdeka, Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), prinsip pembelajaran berdiferensiasi, dan asesmen autentik. Tulis output dalam Bahasa Indonesia baku, terstruktur rapi menggunakan format Markdown (heading #/##/###, list, tabel, bold), TANPA basa-basi pembuka atau penutup di luar dokumen yang diminta. Jangan gunakan blok kode markdown (tiga backtick) untuk membungkus jawaban.`;
+
+  let userPrompt = `Buatkan dokumen berikut untuk kebutuhan mengajar SD:\n\n`;
+  userPrompt += `- Mata Pelajaran: ${mapel}\n`;
+  userPrompt += `- Kelas: ${kelas} SD\n`;
+  userPrompt += `- Materi / Pokok Bahasan: ${materi}\n`;
+  userPrompt += `- Tujuan Pembelajaran (TP): ${tp}\n`;
+  userPrompt += `- Alokasi Waktu: ${jp} JP (${menit} menit)\n\n`;
+
+  if(selectedOutput === 'modul'){
+    userPrompt += `JENIS DOKUMEN: Modul Ajar / RPP lengkap sesuai standar Kurikulum Merdeka.\n`;
+    userPrompt += `Susun dengan struktur berikut secara lengkap dan siap pakai:\n`;
+    userPrompt += `1. Informasi Umum (Identitas modul, Kompetensi Awal, Profil Pelajar Pancasila, Sarana & Prasarana, Target Peserta Didik, Model Pembelajaran)\n`;
+    userPrompt += `2. Komponen Inti (Tujuan Pembelajaran, Pemahaman Bermakna, Pertanyaan Pemantik)\n`;
+    userPrompt += `3. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup) dengan estimasi alokasi waktu yang proporsional terhadap total ${menit} menit\n`;
+    userPrompt += `4. Asesmen (Diagnostik, Formatif, Sumatif) beserta rubrik penilaian sederhana\n`;
+    userPrompt += `5. Pengayaan dan Remedial\n`;
+    userPrompt += `6. Lampiran singkat (Bahan bacaan guru & peserta didik ringkas)\n`;
+  } else if(selectedOutput === 'rangkuman'){
+    userPrompt += `JENIS DOKUMEN: Rangkuman / Materi Ajar untuk dibagikan ke peserta didik dan dijadikan pegangan guru.\n`;
+    userPrompt += `Susun dengan struktur:\n`;
+    userPrompt += `1. Judul Materi & Pengantar singkat\n`;
+    userPrompt += `2. Penjelasan konsep utama secara bertahap, dengan bahasa yang sesuai usia anak kelas ${kelas} SD\n`;
+    userPrompt += `3. Contoh konkret / ilustrasi dari kehidupan sehari-hari\n`;
+    userPrompt += `4. Poin-poin penting (rangkuman akhir dalam bentuk bullet list)\n`;
+    userPrompt += `5. Beberapa pertanyaan refleksi singkat di akhir\n`;
+  } else if(selectedOutput === 'lkpd'){
+    const jenisSoal = [...document.querySelectorAll('#jenisSoalGroup input:checked')].map(i=>i.value);
+    const kesulitan = [...document.querySelectorAll('#kesulitanGroup input:checked')].map(i=>i.value);
+    const jumlahSoal = document.getElementById('jumlahSoal').value || '10';
+    const sertakanKunci = document.getElementById('kunciToggle').classList.contains('on');
+
+    userPrompt += `JENIS DOKUMEN: LKPD (Lembar Kerja Peserta Didik).\n`;
+    userPrompt += `Ketentuan LKPD:\n`;
+    userPrompt += `- Jenis soal yang digunakan: ${jenisSoal.length ? jenisSoal.join(', ') : 'Pilihan Ganda'}\n`;
+    userPrompt += `- Tingkat kesulitan yang harus tersebar proporsional: ${kesulitan.length ? kesulitan.join(', ') : 'Sedang'}\n`;
+    userPrompt += `- Jumlah soal total: ${jumlahSoal} soal\n`;
+    userPrompt += `- ${sertakanKunci ? 'SERTAKAN Kunci Jawaban lengkap dan Rubrik Penilaian di bagian akhir dokumen, dipisahkan dengan heading tersendiri dan garis pembatas (---).' : 'JANGAN sertakan kunci jawaban maupun rubrik penilaian, LKPD murni untuk peserta didik saja.'}\n\n`;
+    userPrompt += `Susun LKPD dengan struktur:\n`;
+    userPrompt += `1. Kop LKPD (Nama Sekolah, Mata Pelajaran, Kelas/Semester, Materi, Nama & Kelas peserta didik sebagai isian kosong)\n`;
+    userPrompt += `2. Petunjuk pengerjaan singkat\n`;
+    userPrompt += `3. Soal-soal bernomor sesuai jenis dan tingkat kesulitan yang diminta, sebar dengan proporsi wajar dan susun dalam tabel bila relevan (misalnya untuk menjodohkan)\n`;
+    if(sertakanKunci){
+      userPrompt += `4. Bagian "Kunci Jawaban & Rubrik Penilaian" di akhir\n`;
+    }
+  }
+
+  return { sistem, userPrompt };
+}
+
+// ---------- SIMPLE MARKDOWN TO HTML ----------
+function markdownToHtml(md){
+  md = md.replace(/```[a-z]*\n?/gi,'').replace(/```/g,'');
+  const lines = md.split('\n');
+  let html = '';
+  let inList = false, listType = '';
+  let inTable = false, tableRows = [];
+
+  function closeList(){ if(inList){ html += listType==='ul' ? '</ul>' : '</ol>'; inList=false; } }
+  function flushTable(){
+    if(!inTable) return;
+    if(tableRows.length){
+      html += '<table><thead><tr>';
+      tableRows[0].forEach(c=> html += `<th>${inlineFmt(c)}</th>`);
+      html += '</tr></thead><tbody>';
+      for(let i=2;i<tableRows.length;i++){
+        html += '<tr>' + tableRows[i].map(c=>`<td>${inlineFmt(c)}</td>`).join('') + '</tr>';
+      }
+      html += '</tbody></table>';
+    }
+    tableRows = []; inTable = false;
+  }
+  function inlineFmt(t){
+    return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g,'<em>$1</em>')
+            .replace(/`(.+?)`/g,'<code>$1</code>');
+  }
+
+  for(let raw of lines){
+    const line = raw.trimEnd();
+    const trimmed = line.trim();
+
+    if(trimmed.includes('|') && trimmed.startsWith('|')){
+      inTable = true;
+      const cells = trimmed.split('|').slice(1,-1).map(c=>c.trim());
+      if(!/^-+$/.test(cells.join('').replace(/[\s:-]/g,'')) ){
+        tableRows.push(cells);
+      } else {
+        tableRows.push(cells);
+      }
+      continue;
+    } else if(inTable){ flushTable(); }
+
+    if(/^###\s+/.test(trimmed)){ closeList(); html += `<h3>${inlineFmt(trimmed.replace(/^###\s+/,''))}</h3>`; continue; }
+    if(/^##\s+/.test(trimmed)){ closeList(); html += `<h2>${inlineFmt(trimmed.replace(/^##\s+/,''))}</h2>`; continue; }
+    if(/^#\s+/.test(trimmed)){ closeList(); html += `<h1>${inlineFmt(trimmed.replace(/^#\s+/,''))}</h1>`; continue; }
+    if(/^---+$/.test(trimmed)){ closeList(); html += '<hr>'; continue; }
+
+    if(/^[-*]\s+/.test(trimmed)){
+      if(!inList || listType!=='ul'){ closeList(); html += '<ul>'; inList=true; listType='ul'; }
+      html += `<li>${inlineFmt(trimmed.replace(/^[-*]\s+/,''))}</li>`;
+      continue;
+    }
+    if(/^\d+\.\s+/.test(trimmed)){
+      if(!inList || listType!=='ol'){ closeList(); html += '<ol>'; inList=true; listType='ol'; }
+      html += `<li>${inlineFmt(trimmed.replace(/^\d+\.\s+/,''))}</li>`;
+      continue;
+    }
+
+    closeList();
+    if(trimmed === ''){ continue; }
+    html += `<p>${inlineFmt(trimmed)}</p>`;
+  }
+  closeList(); flushTable();
+  return html;
+}
+
+// ---------- GEMINI API CALL ----------
+async function generateContent(){
+  const apiKey = localStorage.getItem('gemini_api_key');
+  if(!apiKey){
+    alert('API Key belum diatur. Silakan klik "Pengaturan API Key" di pojok kanan atas terlebih dahulu.');
+    openApiModal();
+    return;
+  }
+  const materi = document.getElementById('materi').value.trim();
+  const tp = document.getElementById('tp').value.trim();
+  if(!materi || !tp){
+    alert('Mohon lengkapi minimal "Materi / Pokok Bahasan" dan "Tujuan Pembelajaran" sebelum generasi konten.');
+    return;
+  }
+
+  const btn = document.getElementById('generateBtn');
+  const btnText = document.getElementById('generateBtnText');
+  const spinner = document.getElementById('generateSpinner');
+  btn.disabled = true;
+  btnText.textContent = 'Sedang Menyusun Dokumen...';
+  spinner.classList.remove('hidden');
+
+  const { sistem, userPrompt } = buildPrompt();
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+  try{
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          { role: 'user', parts: [{ text: sistem + '\n\n' + userPrompt }] }
+        ],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      const msg = data?.error?.message || `Terjadi kesalahan (HTTP ${res.status}).`;
+      throw new Error(msg);
+    }
+
+    const candidate = data?.candidates?.[0];
+    if(!candidate){
+      const blockReason = data?.promptFeedback?.blockReason;
+      throw new Error(blockReason ? `Permintaan diblokir oleh sistem keamanan AI (${blockReason}). Coba ubah kata kunci materi.` : 'Respons AI kosong. Silakan coba lagi.');
+    }
+    const text = candidate.content?.parts?.map(p=>p.text||'').join('\n') || '';
+    if(!text.trim()) throw new Error('AI tidak mengembalikan teks. Silakan coba lagi.');
+
+    document.getElementById('resultContent').innerHTML = markdownToHtml(text);
+    document.getElementById('resultContent').dataset.raw = text;
+    document.getElementById('resultPanel').classList.remove('hidden');
+    document.getElementById('resultPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+
+  } catch(err){
+    console.error(err);
+    let friendly = err.message || 'Terjadi kesalahan tidak diketahui.';
+    if(/API key not valid|API_KEY_INVALID/i.test(friendly)){
+      friendly = 'API Key tidak valid. Silakan periksa kembali di Pengaturan API Key.';
+    } else if(/quota|RESOURCE_EXHAUSTED/i.test(friendly)){
+      friendly = 'Kuota API Key Anda telah habis. Silakan coba lagi nanti atau gunakan API Key lain.';
+    } else if(/network|fetch/i.test(friendly)){
+      friendly = 'Gagal terhubung ke server Gemini. Periksa koneksi internet Anda.';
+    } else if(/not found|NOT_FOUND|404/i.test(friendly)){
+      friendly = 'Model AI yang digunakan sudah tidak tersedia/dipensiunkan oleh Google. Aplikasi perlu diperbarui ke model terbaru.';
+    }
+    alert('Gagal membuat dokumen:\n' + friendly);
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Generasi Konten AI';
+    spinner.classList.add('hidden');
+  }
+}
+
+// ---------- OUTPUT ACTIONS ----------
+function copyText(){
+  const el = document.getElementById('resultContent');
+  const text = el.dataset.raw || el.innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    alert('Teks berhasil disalin ke clipboard.');
+  }).catch(()=>{
+    alert('Gagal menyalin teks. Silakan salin secara manual.');
+  });
+}
+
+function downloadWord(){
+  const content = document.getElementById('resultContent').innerHTML;
+  const judul = (document.getElementById('materi').value.trim() || 'Perangkat_Ajar');
+  const htmlDoc = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset='utf-8'><title>${judul}</title>
+    <style>
+      body{font-family:Calibri, Arial, sans-serif; font-size:12pt;}
+      h1{font-size:18pt;} h2{font-size:15pt; color:#1D3F73;} h3{font-size:13pt; color:#3E5C76;}
+      table{border-collapse:collapse; width:100%;} th,td{border:1px solid #999; padding:6px;}
+      th{background:#EFE9D8;}
+    </style></head>
+    <body>${content}</body></html>`;
+  const blob = new Blob(['\ufeff', htmlDoc], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = judul.replace(/[^a-z0-9]+/gi,'_') + '.doc';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function printResult(){
+  window.print();
+}
+</script>
+</body>
+</html>
