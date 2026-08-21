@@ -133,8 +133,10 @@
     <p class="text-slate-500 mt-2 text-sm sm:text-base">Isi parameter pembelajaran seperti mencari referensi &mdash; AI akan menyusunkan dokumennya untuk Anda.</p>
   </div>
 
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
   <!-- SEARCH SHELL / FORM -->
-  <div class="search-shell rounded-2xl p-5 sm:p-7">
+  <div class="search-shell rounded-2xl p-5 sm:p-7 lg:col-span-2">
 
     <!-- OUTPUT TYPE SELECTOR -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -217,16 +219,6 @@
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Jenis Soal</label>
-          <div class="mt-2 flex flex-wrap gap-2" id="jenisSoalGroup">
-            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Pilihan Ganda" checked><span>Pilihan Ganda</span></label>
-            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Pilihan Ganda Kompleks"><span>PG Kompleks</span></label>
-            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Menjodohkan"><span>Menjodohkan</span></label>
-            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Isian Singkat / Essay" checked><span>Isian Singkat</span></label>
-            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Uraian"><span>Uraian</span></label>
-          </div>
-        </div>
-        <div>
           <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Tingkat Kesulitan</label>
           <div class="mt-2 flex flex-wrap gap-2" id="kesulitanGroup">
             <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Mudah" checked><span>Mudah</span></label>
@@ -235,14 +227,64 @@
             <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="HOTS"><span>HOTS</span></label>
           </div>
         </div>
-        <div>
-          <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Jumlah Soal</label>
-          <input type="number" id="jumlahSoal" min="1" value="10" class="mt-2 w-28 border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
-        </div>
         <div class="flex items-center">
           <div class="flex items-center gap-3 mt-2 sm:mt-6">
             <div class="toggle-outer on" id="kunciToggle" onclick="toggleKunci()"><div class="toggle-dot"></div></div>
             <label class="text-sm text-slate-700 cursor-pointer" onclick="toggleKunci()">Sertakan Kunci Jawaban & Rubrik Penilaian</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODE JUMLAH SOAL -->
+      <div class="mt-5">
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+          <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Jenis & Jumlah Soal</label>
+          <div class="flex bg-slate-100 rounded-lg p-1 text-xs font-medium">
+            <button type="button" id="modeTotalBtn" onclick="setJumlahMode('total')" class="px-3 py-1.5 rounded-md transition bg-white shadow text-[color:var(--chalk-blue-dark)]">Total Keseluruhan</button>
+            <button type="button" id="modePerJenisBtn" onclick="setJumlahMode('perjenis')" class="px-3 py-1.5 rounded-md transition text-slate-500">Per Jenis Soal</button>
+          </div>
+        </div>
+
+        <!-- MODE 1: TOTAL KESELURUHAN -->
+        <div id="modeTotalPanel">
+          <div class="flex flex-wrap gap-2 mb-3" id="jenisSoalGroup">
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Pilihan Ganda" checked><span>Pilihan Ganda</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Pilihan Ganda Kompleks"><span>PG Kompleks</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Menjodohkan"><span>Menjodohkan</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Isian Singkat / Essay" checked><span>Isian Singkat</span></label>
+            <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Uraian"><span>Uraian</span></label>
+          </div>
+          <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Jumlah Soal (Total, AI yang bagi proporsi tiap jenis)</label>
+          <input type="number" id="jumlahSoal" min="1" value="10" class="mt-2 w-28 border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+        </div>
+
+        <!-- MODE 2: PER JENIS SOAL -->
+        <div id="modePerJenisPanel" class="hidden">
+          <div class="space-y-2" id="perJenisGroup">
+            <div class="flex items-center justify-between gap-3 bg-white border border-[color:var(--line)] rounded-lg px-3 py-2">
+              <span class="text-sm text-slate-700">Pilihan Ganda</span>
+              <input type="number" min="0" value="0" data-jenis="Pilihan Ganda" oninput="hitungTotalPerJenis()" class="perjenis-input w-20 border border-[color:var(--line)] rounded-md px-2 py-1 text-sm text-right">
+            </div>
+            <div class="flex items-center justify-between gap-3 bg-white border border-[color:var(--line)] rounded-lg px-3 py-2">
+              <span class="text-sm text-slate-700">Pilihan Ganda Kompleks</span>
+              <input type="number" min="0" value="0" data-jenis="Pilihan Ganda Kompleks" oninput="hitungTotalPerJenis()" class="perjenis-input w-20 border border-[color:var(--line)] rounded-md px-2 py-1 text-sm text-right">
+            </div>
+            <div class="flex items-center justify-between gap-3 bg-white border border-[color:var(--line)] rounded-lg px-3 py-2">
+              <span class="text-sm text-slate-700">Menjodohkan</span>
+              <input type="number" min="0" value="0" data-jenis="Menjodohkan" oninput="hitungTotalPerJenis()" class="perjenis-input w-20 border border-[color:var(--line)] rounded-md px-2 py-1 text-sm text-right">
+            </div>
+            <div class="flex items-center justify-between gap-3 bg-white border border-[color:var(--line)] rounded-lg px-3 py-2">
+              <span class="text-sm text-slate-700">Isian Singkat / Essay</span>
+              <input type="number" min="0" value="0" data-jenis="Isian Singkat / Essay" oninput="hitungTotalPerJenis()" class="perjenis-input w-20 border border-[color:var(--line)] rounded-md px-2 py-1 text-sm text-right">
+            </div>
+            <div class="flex items-center justify-between gap-3 bg-white border border-[color:var(--line)] rounded-lg px-3 py-2">
+              <span class="text-sm text-slate-700">Uraian</span>
+              <input type="number" min="0" value="0" data-jenis="Uraian" oninput="hitungTotalPerJenis()" class="perjenis-input w-20 border border-[color:var(--line)] rounded-md px-2 py-1 text-sm text-right">
+            </div>
+          </div>
+          <div class="flex items-center justify-between mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <span class="text-xs font-semibold text-amber-800 uppercase tracking-wide">Total Soal</span>
+            <span class="text-sm font-bold text-amber-800" id="totalPerJenisLabel">0 soal</span>
           </div>
         </div>
       </div>
@@ -256,6 +298,37 @@
         <span id="generateSpinner" class="spinner hidden"></span>
       </button>
     </div>
+  </div>
+
+  <!-- PANEL GAMBAR REFERENSI -->
+  <div class="search-shell rounded-2xl p-5 sm:p-6 lg:col-span-1">
+    <p class="font-display font-semibold text-sm text-[color:var(--ink)] mb-1 flex items-center gap-2">
+      <i class="fa-solid fa-image text-[color:var(--chalk-blue)]"></i> Lampiran Gambar <span class="text-slate-400 font-normal text-xs">(Opsional)</span>
+    </p>
+    <p class="text-xs text-slate-500 mb-3 leading-relaxed">Upload diagram, bangun datar/ruang, atau ilustrasi soal. AI akan menganalisis gambar ini sebagai konteks tambahan saat menyusun dokumen.</p>
+
+    <label id="dropZone" for="imageInput" class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[color:var(--line)] rounded-xl py-6 px-3 cursor-pointer hover:border-[color:var(--chalk-blue)] hover:bg-blue-50/40 transition text-center">
+      <i class="fa-solid fa-cloud-arrow-up text-2xl text-[color:var(--chalk-blue)]"></i>
+      <span class="text-xs text-slate-500">Klik atau seret gambar ke sini<br><span class="text-[10px] text-slate-400">Maks 5 gambar &middot; JPG/PNG</span></span>
+    </label>
+    <input type="file" id="imageInput" accept="image/*" multiple class="hidden" onchange="handleImageUpload(event)">
+
+    <div id="imageThumbs" class="grid grid-cols-3 gap-2 mt-3"></div>
+    <p id="imageCountLabel" class="text-[11px] text-slate-400 mt-1 hidden"></p>
+
+    <div class="mt-4 pt-4 border-t border-dashed border-[color:var(--line)]">
+      <div class="flex items-center gap-3">
+        <div class="toggle-outer on" id="sertakanGambarToggle" onclick="toggleSertakanGambar()"><div class="toggle-dot"></div></div>
+        <label class="text-xs text-slate-700 cursor-pointer leading-snug" onclick="toggleSertakanGambar()">Sertakan gambar asli di dokumen hasil (web, Word, cetak)</label>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Instruksi Tambahan tentang Gambar</label>
+      <textarea id="imageInstruksi" rows="2" placeholder="Contoh: Fokuskan soal pada gambar 1 dan 2 saja" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white resize-none"></textarea>
+    </div>
+  </div>
+
   </div>
 
   <!-- RESULT PANEL -->
@@ -343,6 +416,122 @@ function toggleKunci(){
   document.getElementById('kunciToggle').classList.toggle('on');
 }
 
+// ---------- MODE JUMLAH SOAL (Total vs Per Jenis) ----------
+let jumlahSoalMode = 'total';
+function setJumlahMode(mode){
+  jumlahSoalMode = mode;
+  document.getElementById('modeTotalBtn').classList.toggle('bg-white', mode==='total');
+  document.getElementById('modeTotalBtn').classList.toggle('shadow', mode==='total');
+  document.getElementById('modeTotalBtn').classList.toggle('text-[color:var(--chalk-blue-dark)]', mode==='total');
+  document.getElementById('modeTotalBtn').classList.toggle('text-slate-500', mode!=='total');
+  document.getElementById('modePerJenisBtn').classList.toggle('bg-white', mode==='perjenis');
+  document.getElementById('modePerJenisBtn').classList.toggle('shadow', mode==='perjenis');
+  document.getElementById('modePerJenisBtn').classList.toggle('text-[color:var(--chalk-blue-dark)]', mode==='perjenis');
+  document.getElementById('modePerJenisBtn').classList.toggle('text-slate-500', mode!=='perjenis');
+  document.getElementById('modeTotalPanel').classList.toggle('hidden', mode!=='total');
+  document.getElementById('modePerJenisPanel').classList.toggle('hidden', mode!=='perjenis');
+}
+function hitungTotalPerJenis(){
+  const total = [...document.querySelectorAll('.perjenis-input')].reduce((sum,inp)=> sum + (parseInt(inp.value)||0), 0);
+  document.getElementById('totalPerJenisLabel').textContent = total + ' soal';
+}
+
+// ---------- UPLOAD & KOMPRESI GAMBAR ----------
+const MAX_IMAGES = 5;
+let uploadedImages = []; // {base64, mimeType, name}
+let sertakanGambarDiDokumen = true;
+
+function toggleSertakanGambar(){
+  sertakanGambarDiDokumen = !sertakanGambarDiDokumen;
+  document.getElementById('sertakanGambarToggle').classList.toggle('on', sertakanGambarDiDokumen);
+}
+
+function compressImage(file, maxDim=1280, quality=0.75){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          const ratio = Math.min(maxDim/width, maxDim/height);
+          width = Math.round(width*ratio);
+          height = Math.round(height*ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve({ base64: dataUrl.split(',')[1], mimeType: 'image/jpeg', dataUrl, name: file.name });
+      };
+      img.onerror = ()=> reject(new Error('Gagal memuat gambar: ' + file.name));
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=> reject(new Error('Gagal membaca file: ' + file.name));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleImageUpload(event){
+  const files = [...event.target.files];
+  event.target.value = ''; // reset input agar file yang sama bisa diupload ulang jika perlu
+
+  if(uploadedImages.length + files.length > MAX_IMAGES){
+    alert(`Maksimal ${MAX_IMAGES} gambar per generate. Anda sudah punya ${uploadedImages.length}, dan mencoba menambah ${files.length}.`);
+    return;
+  }
+
+  for(const file of files){
+    if(!file.type.startsWith('image/')){
+      alert(`File "${file.name}" bukan gambar dan dilewati.`);
+      continue;
+    }
+    try{
+      const compressed = await compressImage(file);
+      uploadedImages.push(compressed);
+    } catch(err){
+      console.error(err);
+      alert('Gagal memproses gambar: ' + file.name);
+    }
+  }
+  renderImageThumbs();
+}
+
+function removeImage(index){
+  uploadedImages.splice(index, 1);
+  renderImageThumbs();
+}
+
+function renderImageThumbs(){
+  const wrap = document.getElementById('imageThumbs');
+  wrap.innerHTML = uploadedImages.map((img, i)=>`
+    <div class="relative group">
+      <img src="${img.dataUrl}" class="w-full h-16 object-cover rounded-lg border border-[color:var(--line)]">
+      <button onclick="removeImage(${i})" class="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  `).join('');
+  const label = document.getElementById('imageCountLabel');
+  if(uploadedImages.length){
+    label.textContent = `${uploadedImages.length} / ${MAX_IMAGES} gambar terpasang`;
+    label.classList.remove('hidden');
+  } else {
+    label.classList.add('hidden');
+  }
+}
+
+// Drag & drop support
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('border-[color:var(--chalk-blue)]','bg-blue-50/40'); });
+dz.addEventListener('dragleave', ()=>{ dz.classList.remove('border-[color:var(--chalk-blue)]','bg-blue-50/40'); });
+dz.addEventListener('drop', e=>{
+  e.preventDefault();
+  dz.classList.remove('border-[color:var(--chalk-blue)]','bg-blue-50/40');
+  handleImageUpload({ target: { files: e.dataTransfer.files, value: '' } });
+});
+
 // ---------- API KEY HANDLING ----------
 function refreshApiStatus(){
   const key = localStorage.getItem('gemini_api_key');
@@ -404,23 +593,43 @@ function buildPrompt(){
     userPrompt += `4. Poin-poin penting (rangkuman akhir dalam bentuk bullet list)\n`;
     userPrompt += `5. Beberapa pertanyaan refleksi singkat di akhir\n`;
   } else if(selectedOutput === 'lkpd'){
-    const jenisSoal = [...document.querySelectorAll('#jenisSoalGroup input:checked')].map(i=>i.value);
     const kesulitan = [...document.querySelectorAll('#kesulitanGroup input:checked')].map(i=>i.value);
-    const jumlahSoal = document.getElementById('jumlahSoal').value || '10';
     const sertakanKunci = document.getElementById('kunciToggle').classList.contains('on');
 
     userPrompt += `JENIS DOKUMEN: LKPD (Lembar Kerja Peserta Didik).\n`;
     userPrompt += `Ketentuan LKPD:\n`;
-    userPrompt += `- Jenis soal yang digunakan: ${jenisSoal.length ? jenisSoal.join(', ') : 'Pilihan Ganda'}\n`;
+
+    if(jumlahSoalMode === 'perjenis'){
+      const rincian = [...document.querySelectorAll('.perjenis-input')]
+        .map(inp=>({ jenis: inp.dataset.jenis, jumlah: parseInt(inp.value)||0 }))
+        .filter(r=>r.jumlah > 0);
+      const totalSoal = rincian.reduce((s,r)=>s+r.jumlah,0);
+      userPrompt += `- Jumlah soal ditentukan PERSIS per jenis soal (WAJIB diikuti tepat, jangan diubah proporsinya):\n`;
+      rincian.forEach(r=> userPrompt += `  * ${r.jenis}: ${r.jumlah} soal\n`);
+      userPrompt += `- Total keseluruhan: ${totalSoal} soal\n`;
+    } else {
+      const jenisSoal = [...document.querySelectorAll('#jenisSoalGroup input:checked')].map(i=>i.value);
+      const jumlahSoal = document.getElementById('jumlahSoal').value || '10';
+      userPrompt += `- Jenis soal yang digunakan: ${jenisSoal.length ? jenisSoal.join(', ') : 'Pilihan Ganda'}\n`;
+      userPrompt += `- Jumlah soal total: ${jumlahSoal} soal (silakan dibagi proporsional ke jenis-jenis soal di atas)\n`;
+    }
+
     userPrompt += `- Tingkat kesulitan yang harus tersebar proporsional: ${kesulitan.length ? kesulitan.join(', ') : 'Sedang'}\n`;
-    userPrompt += `- Jumlah soal total: ${jumlahSoal} soal\n`;
     userPrompt += `- ${sertakanKunci ? 'SERTAKAN Kunci Jawaban lengkap dan Rubrik Penilaian di bagian akhir dokumen, dipisahkan dengan heading tersendiri dan garis pembatas (---).' : 'JANGAN sertakan kunci jawaban maupun rubrik penilaian, LKPD murni untuk peserta didik saja.'}\n\n`;
     userPrompt += `Susun LKPD dengan struktur:\n`;
     userPrompt += `1. Kop LKPD (Nama Sekolah, Mata Pelajaran, Kelas/Semester, Materi, Nama & Kelas peserta didik sebagai isian kosong)\n`;
     userPrompt += `2. Petunjuk pengerjaan singkat\n`;
-    userPrompt += `3. Soal-soal bernomor sesuai jenis dan tingkat kesulitan yang diminta, sebar dengan proporsi wajar dan susun dalam tabel bila relevan (misalnya untuk menjodohkan)\n`;
+    userPrompt += `3. Soal-soal bernomor sesuai jenis, jumlah, dan tingkat kesulitan yang diminta, susun dalam tabel bila relevan (misalnya untuk menjodohkan)\n`;
     if(sertakanKunci){
       userPrompt += `4. Bagian "Kunci Jawaban & Rubrik Penilaian" di akhir\n`;
+    }
+  }
+
+  if(uploadedImages.length){
+    const instruksiGambar = document.getElementById('imageInstruksi').value.trim();
+    userPrompt += `\nLAMPIRAN GAMBAR: Terdapat ${uploadedImages.length} gambar terlampir (diberi label Gambar 1, Gambar 2, dst. sesuai urutan). Gambar ini berisi diagram/bangun datar/bangun ruang/ilustrasi yang WAJIB dijadikan rujukan utama dalam menyusun dokumen ini — misalnya soal atau penjelasan yang secara eksplisit merujuk "perhatikan Gambar 1/2/dst.". Analisis dengan cermat bentuk, angka, label, atau data yang tampak pada tiap gambar sebelum menyusun dokumen.\n`;
+    if(instruksiGambar){
+      userPrompt += `Instruksi tambahan dari guru terkait gambar: ${instruksiGambar}\n`;
     }
   }
 
@@ -508,6 +717,13 @@ async function generateContent(){
     alert('Mohon lengkapi minimal "Materi / Pokok Bahasan" dan "Tujuan Pembelajaran" sebelum generasi konten.');
     return;
   }
+  if(selectedOutput === 'lkpd' && jumlahSoalMode === 'perjenis'){
+    const totalPerJenis = [...document.querySelectorAll('.perjenis-input')].reduce((s,inp)=> s + (parseInt(inp.value)||0), 0);
+    if(totalPerJenis < 1){
+      alert('Mohon isi jumlah soal minimal 1 pada salah satu jenis soal (Mode "Per Jenis Soal").');
+      return;
+    }
+  }
 
   const btn = document.getElementById('generateBtn');
   const btnText = document.getElementById('generateBtnText');
@@ -519,13 +735,19 @@ async function generateContent(){
   const { sistem, userPrompt } = buildPrompt();
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
 
+  const parts = [{ text: sistem + '\n\n' + userPrompt }];
+  uploadedImages.forEach((img, i)=>{
+    parts.push({ text: `Gambar ${i+1}:` });
+    parts.push({ inline_data: { mime_type: img.mimeType, data: img.base64 } });
+  });
+
   try{
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [
-          { role: 'user', parts: [{ text: sistem + '\n\n' + userPrompt }] }
+          { role: 'user', parts: parts }
         ],
         generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
       })
@@ -546,7 +768,18 @@ async function generateContent(){
     const text = candidate.content?.parts?.map(p=>p.text||'').join('\n') || '';
     if(!text.trim()) throw new Error('AI tidak mengembalikan teks. Silakan coba lagi.');
 
-    document.getElementById('resultContent').innerHTML = markdownToHtml(text);
+    let finalHtml = markdownToHtml(text);
+    if(uploadedImages.length && sertakanGambarDiDokumen){
+      const galeri = `<div class="not-prose grid grid-cols-2 sm:grid-cols-3 gap-3 my-4 p-3 bg-slate-50 border border-[color:var(--line)] rounded-xl">` +
+        uploadedImages.map((img,i)=>`
+          <figure class="text-center">
+            <img src="${img.dataUrl}" class="w-full rounded-lg border border-[color:var(--line)] object-contain max-h-48 bg-white">
+            <figcaption class="text-[11px] text-slate-500 mt-1">Gambar ${i+1}</figcaption>
+          </figure>`).join('') +
+        `</div>`;
+      finalHtml = galeri + finalHtml;
+    }
+    document.getElementById('resultContent').innerHTML = finalHtml;
     document.getElementById('resultContent').dataset.raw = text;
     document.getElementById('resultPanel').classList.remove('hidden');
     document.getElementById('resultPanel').scrollIntoView({ behavior:'smooth', block:'start' });
