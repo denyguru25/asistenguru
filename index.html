@@ -649,6 +649,7 @@ function markdownToHtml(md){
   let html = '';
   let inList = false; // hanya untuk bullet list (ul)
   let inTable = false, tableRows = [];
+  let questionCounter = 0; // dihitung sendiri oleh aplikasi, TIDAK mengandalkan nomor tulisan AI
 
   function closeList(){ if(inList){ html += '</ul>'; inList=false; } }
   function flushTable(){
@@ -685,9 +686,11 @@ function markdownToHtml(md){
       continue;
     } else if(inTable){ flushTable(); }
 
-    if(/^###\s+/.test(trimmed)){ closeList(); html += `<h3>${inlineFmt(trimmed.replace(/^###\s+/,''))}</h3>`; continue; }
-    if(/^##\s+/.test(trimmed)){ closeList(); html += `<h2>${inlineFmt(trimmed.replace(/^##\s+/,''))}</h2>`; continue; }
-    if(/^#\s+/.test(trimmed)){ closeList(); html += `<h1>${inlineFmt(trimmed.replace(/^#\s+/,''))}</h1>`; continue; }
+    // Heading = section baru -> nomor soal reset ke 1 lagi (ini yang memang diinginkan,
+    // misal pindah dari "Isian Singkat" ke "Uraian")
+    if(/^###\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h3>${inlineFmt(trimmed.replace(/^###\s+/,''))}</h3>`; continue; }
+    if(/^##\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h2>${inlineFmt(trimmed.replace(/^##\s+/,''))}</h2>`; continue; }
+    if(/^#\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h1>${inlineFmt(trimmed.replace(/^#\s+/,''))}</h1>`; continue; }
     if(/^---+$/.test(trimmed)){ closeList(); html += '<hr>'; continue; }
 
     // Bullet list (-, *)
@@ -697,12 +700,13 @@ function markdownToHtml(md){
       continue;
     }
 
-    // Soal/poin bernomor "1. ", "2. ", dst — nomor DIAMBIL LANGSUNG dari teks AI,
-    // bukan auto-count <ol>, supaya tidak pernah "reset" ke 1 walau terpisah baris kosong/opsi jawaban.
+    // Soal/poin bernomor "1. ", "2. ", dst — nomor DIHITUNG SENDIRI oleh aplikasi
+    // (bukan dipercaya dari teks AI, karena AI kadang salah hitung/menulis "1." berulang).
     const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
     if(numMatch){
       closeList();
-      html += `<div class="num-item"><span class="num-marker">${numMatch[1]}.</span><span class="num-content">${inlineFmt(numMatch[2])}</span></div>`;
+      questionCounter++;
+      html += `<div class="num-item"><span class="num-marker">${questionCounter}.</span><span class="num-content">${inlineFmt(numMatch[2])}</span></div>`;
       continue;
     }
 
@@ -896,6 +900,7 @@ async function downloadWord(){
     const lines = raw.replace(/```[a-z]*\n?/gi,'').replace(/```/g,'').split('\n');
     let tableBuffer = [];
     let inTable = false;
+    let questionCounter = 0; // dihitung sendiri oleh aplikasi, TIDAK mengandalkan nomor tulisan AI
 
     function flushTable(){
       if(!tableBuffer.length){ inTable=false; return; }
@@ -927,9 +932,10 @@ async function downloadWord(){
         continue;
       } else if(inTable){ flushTable(); }
 
-      if(/^###\s+/.test(trimmed)){ children.push(new Paragraph({ text: trimmed.replace(/^###\s+/,''), heading: HeadingLevel.HEADING_3, spacing:{before:160} })); continue; }
-      if(/^##\s+/.test(trimmed)){ children.push(new Paragraph({ text: trimmed.replace(/^##\s+/,''), heading: HeadingLevel.HEADING_2, spacing:{before:200} })); continue; }
-      if(/^#\s+/.test(trimmed)){ children.push(new Paragraph({ text: trimmed.replace(/^#\s+/,''), heading: HeadingLevel.HEADING_1, spacing:{before:200} })); continue; }
+      // Heading = section baru -> nomor soal reset ke 1 lagi (memang diinginkan)
+      if(/^###\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^###\s+/,''), heading: HeadingLevel.HEADING_3, spacing:{before:160} })); continue; }
+      if(/^##\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^##\s+/,''), heading: HeadingLevel.HEADING_2, spacing:{before:200} })); continue; }
+      if(/^#\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^#\s+/,''), heading: HeadingLevel.HEADING_1, spacing:{before:200} })); continue; }
       if(/^---+$/.test(trimmed)){
         children.push(new Paragraph({ text:'', border: { bottom: { style: BorderStyle.SINGLE, size:6, color:'D8CDB8' } }, spacing:{before:120, after:120} }));
         continue;
@@ -940,13 +946,14 @@ async function downloadWord(){
         continue;
       }
 
-      // Nomor soal: angka DIAMBIL LANGSUNG dari teks AI (bukan auto-numbering docx),
-      // supaya konsisten dengan tampilan web & tidak pernah "reset" ke 1.
+      // Nomor soal: DIHITUNG SENDIRI oleh aplikasi (bukan dipercaya dari teks AI,
+      // karena AI kadang salah hitung/menulis "1." berulang). Konsisten dengan tampilan web.
       const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
       if(numMatch){
+        questionCounter++;
         children.push(new Paragraph({
           spacing: { before: 160, after: 60 },
-          children: [ new TextRun({ text: numMatch[1] + '. ', bold:true, color:'1D3F73' }), ...parseInlineRunsDocx(numMatch[2]) ],
+          children: [ new TextRun({ text: questionCounter + '. ', bold:true, color:'1D3F73' }), ...parseInlineRunsDocx(numMatch[2]) ],
         }));
         continue;
       }
