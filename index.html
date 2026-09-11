@@ -122,11 +122,17 @@
         <p class="text-[11px] sm:text-xs text-blue-100/70 -mt-0.5">Generator Perangkat Ajar & LKPD SD &middot; Kurikulum Merdeka</p>
       </div>
     </div>
-    <button onclick="openApiModal()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-2 rounded-lg text-sm font-medium transition">
-      <i class="fa-solid fa-key text-amber-300"></i>
-      <span class="hidden sm:inline">Pengaturan API Key</span>
-      <span id="apiStatusDot" class="w-2 h-2 rounded-full bg-red-400"></span>
-    </button>
+    <div class="flex items-center gap-2">
+      <button onclick="openRiwayatDrawer()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-2 rounded-lg text-sm font-medium transition">
+        <i class="fa-solid fa-clock-rotate-left text-amber-300"></i>
+        <span class="hidden sm:inline">Riwayat</span>
+      </button>
+      <button onclick="openApiModal()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-2 rounded-lg text-sm font-medium transition">
+        <i class="fa-solid fa-key text-amber-300"></i>
+        <span class="hidden sm:inline">Pengaturan API Key</span>
+        <span id="apiStatusDot" class="w-2 h-2 rounded-full bg-red-400"></span>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -368,6 +374,24 @@
   EduSearch AI &middot; Dibangun untuk Guru SD Indonesia &middot; Ditenagai oleh Google Gemini
 </footer>
 
+<!-- RIWAYAT DRAWER -->
+<div id="riwayatOverlay" class="hidden fixed inset-0 bg-black/40 z-50" onclick="closeRiwayatDrawer()"></div>
+<div id="riwayatDrawer" class="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-[color:var(--paper)] z-50 shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
+  <div class="bg-[color:var(--chalk-blue-dark)] px-5 py-4 flex items-center justify-between flex-shrink-0">
+    <p class="text-white font-display font-semibold flex items-center gap-2">
+      <i class="fa-solid fa-clock-rotate-left text-amber-300"></i> Riwayat Generate
+    </p>
+    <button onclick="closeRiwayatDrawer()" class="text-white/70 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+  </div>
+  <div class="px-5 py-3 border-b border-[color:var(--line)] flex items-center justify-between flex-shrink-0">
+    <p class="text-xs text-slate-500">Maks. 30 riwayat terakhir, tersimpan di browser ini</p>
+    <button onclick="clearAllRiwayat()" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1">
+      <i class="fa-regular fa-trash-can"></i> Hapus Semua
+    </button>
+  </div>
+  <div id="riwayatList" class="flex-1 overflow-y-auto px-4 py-3 space-y-2.5"></div>
+</div>
+
 <!-- API KEY MODAL -->
 <div id="apiModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl w-full max-w-md p-6 scale-anim">
@@ -537,6 +561,104 @@ dz.addEventListener('drop', e=>{
   dz.classList.remove('border-[color:var(--chalk-blue)]','bg-blue-50/40');
   handleImageUpload({ target: { files: e.dataTransfer.files, value: '' } });
 });
+
+// ---------- RIWAYAT GENERATE (localStorage, tanpa gambar) ----------
+const RIWAYAT_KEY = 'edusearch_riwayat_v1';
+const RIWAYAT_MAX = 30;
+const OUTPUT_LABEL = { modul: 'Modul Ajar / RPP', rangkuman: 'Rangkuman / Materi', lkpd: 'LKPD' };
+
+function loadRiwayat(){
+  try{
+    const raw = localStorage.getItem(RIWAYAT_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e){ console.error('Gagal membaca riwayat:', e); return []; }
+}
+function saveRiwayatList(list){
+  try{
+    localStorage.setItem(RIWAYAT_KEY, JSON.stringify(list));
+  } catch(e){
+    console.error('Gagal menyimpan riwayat (kemungkinan penyimpanan browser penuh):', e);
+  }
+}
+function simpanKeRiwayat(rawText){
+  const entry = {
+    id: Date.now() + '-' + Math.random().toString(36).slice(2,7),
+    timestamp: Date.now(),
+    mapel: document.getElementById('mapel').value.trim() || '-',
+    kelas: document.getElementById('kelas').value,
+    materi: document.getElementById('materi').value.trim() || '(tanpa judul)',
+    jenisOutput: selectedOutput,
+    rawText: rawText,
+  };
+  let list = loadRiwayat();
+  list.unshift(entry);
+  if(list.length > RIWAYAT_MAX){ list = list.slice(0, RIWAYAT_MAX); }
+  saveRiwayatList(list);
+}
+function formatTanggalRiwayat(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) + ', ' +
+         d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+}
+function renderRiwayatList(){
+  const wrap = document.getElementById('riwayatList');
+  const list = loadRiwayat();
+  if(!list.length){
+    wrap.innerHTML = `<div class="text-center text-sm text-slate-400 mt-10">
+      <i class="fa-regular fa-folder-open text-3xl mb-2 block"></i>
+      Belum ada riwayat generate.
+    </div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(item=>{
+    const cuplikan = (item.rawText || '').replace(/[#*_>-]/g,'').replace(/\s+/g,' ').trim().slice(0,90);
+    return `
+    <div class="paper-card rounded-xl p-3.5 cursor-pointer hover:border-[color:var(--chalk-blue)] transition group" onclick="restoreRiwayat('${item.id}')">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[color:var(--chalk-blue-dark)] mb-1">${OUTPUT_LABEL[item.jenisOutput] || item.jenisOutput}</span>
+          <p class="font-display font-semibold text-sm text-[color:var(--ink)] truncate">${item.materi}</p>
+          <p class="text-[11px] text-slate-500">${item.mapel} &middot; Kelas ${item.kelas}</p>
+        </div>
+        <button onclick="event.stopPropagation(); hapusRiwayatItem('${item.id}')" class="text-slate-300 hover:text-red-500 flex-shrink-0 p-1">
+          <i class="fa-regular fa-trash-can text-sm"></i>
+        </button>
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2 line-clamp-2">${cuplikan}${cuplikan.length>=90?'...':''}</p>
+      <p class="text-[10px] text-slate-400 mt-1.5"><i class="fa-regular fa-clock"></i> ${formatTanggalRiwayat(item.timestamp)}</p>
+    </div>`;
+  }).join('');
+}
+function restoreRiwayat(id){
+  const list = loadRiwayat();
+  const item = list.find(x=>x.id===id);
+  if(!item) return;
+  document.getElementById('resultContent').innerHTML = markdownToHtml(item.rawText);
+  document.getElementById('resultContent').dataset.raw = item.rawText;
+  document.getElementById('resultPanel').classList.remove('hidden');
+  closeRiwayatDrawer();
+  document.getElementById('resultPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function hapusRiwayatItem(id){
+  let list = loadRiwayat();
+  list = list.filter(x=>x.id!==id);
+  saveRiwayatList(list);
+  renderRiwayatList();
+}
+function clearAllRiwayat(){
+  if(!confirm('Hapus semua riwayat? Tindakan ini tidak bisa dibatalkan.')) return;
+  saveRiwayatList([]);
+  renderRiwayatList();
+}
+function openRiwayatDrawer(){
+  renderRiwayatList();
+  document.getElementById('riwayatOverlay').classList.remove('hidden');
+  document.getElementById('riwayatDrawer').classList.remove('translate-x-full');
+}
+function closeRiwayatDrawer(){
+  document.getElementById('riwayatOverlay').classList.add('hidden');
+  document.getElementById('riwayatDrawer').classList.add('translate-x-full');
+}
 
 // ---------- API KEY HANDLING ----------
 function refreshApiStatus(){
@@ -805,6 +927,8 @@ async function generateContent(){
     document.getElementById('resultContent').dataset.raw = text;
     document.getElementById('resultPanel').classList.remove('hidden');
     document.getElementById('resultPanel').scrollIntoView({ behavior:'smooth', block:'start' });
+
+    simpanKeRiwayat(text); // otomatis simpan ke riwayat setiap generate berhasil
 
   } catch(err){
     console.error(err);
