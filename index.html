@@ -694,7 +694,7 @@ function buildPrompt(){
   const jp = document.getElementById('jp').value || '1';
   const menit = (parseFloat(jp)||0) * 35;
 
-  let sistem = `Anda adalah asisten AI ahli pendidikan dasar di Indonesia dengan pengalaman lebih dari 20 tahun sebagai pengembang kurikulum dan guru SD. Anda sangat menguasai standar Kurikulum Merdeka, Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), prinsip pembelajaran berdiferensiasi, dan asesmen autentik. Tulis output dalam Bahasa Indonesia baku, terstruktur rapi menggunakan format Markdown (heading #/##/###, list, tabel, bold), TANPA basa-basi pembuka atau penutup di luar dokumen yang diminta. Jangan gunakan blok kode markdown (tiga backtick) untuk membungkus jawaban.`;
+  let sistem = `Anda adalah asisten AI ahli pendidikan dasar di Indonesia dengan pengalaman lebih dari 20 tahun sebagai pengembang kurikulum dan guru SD. Anda sangat menguasai standar Kurikulum Merdeka, Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), prinsip pembelajaran berdiferensiasi, dan asesmen autentik. Tulis output dalam Bahasa Indonesia baku, terstruktur rapi menggunakan format Markdown (heading #/##/###, list, tabel, bold), TANPA basa-basi pembuka atau penutup di luar dokumen yang diminta. Jangan gunakan blok kode markdown (tiga backtick) untuk membungkus jawaban. JANGAN PERNAH menggunakan notasi LaTeX/matematika (contoh yang DILARANG: $\\rightarrow$, $\\times$, $\\frac{1}{2}$, \\rightarrow, dst.) karena tidak bisa dirender dan akan tampil sebagai kode mentah. Sebagai gantinya, gunakan simbol Unicode biasa langsung di dalam teks, misalnya: panah pakai → atau -> , perkalian pakai × , pembagian pakai ÷ , pecahan tulis biasa seperti "1/2" atau "seperdua", derajat pakai ° , pangkat dua pakai ² , pangkat tiga pakai ³.`;
 
   let userPrompt = `Buatkan dokumen berikut untuk kebutuhan mengajar SD:\n\n`;
   userPrompt += `- Mata Pelajaran: ${mapel}\n`;
@@ -764,8 +764,33 @@ function buildPrompt(){
   return { sistem, userPrompt };
 }
 
+// ---------- JARING PENGAMAN: BERSIHKAN NOTASI LATEX ----------
+// AI kadang tetap menulis notasi LaTeX (mis. "$\rightarrow$") walau sudah dilarang di prompt.
+// Fungsi ini mengubahnya jadi simbol Unicode biasa supaya tetap tampil benar di web maupun Word.
+function bersihkanLatex(text){
+  if(!text) return text;
+  return text
+    .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '$1/$2')
+    .replace(/\$?\\rightarrow\$?/g, '→')
+    .replace(/\$?\\leftarrow\$?/g, '←')
+    .replace(/\$?\\Rightarrow\$?/g, '⇒')
+    .replace(/\$?\\Leftrightarrow\$?/g, '⇔')
+    .replace(/\$?\\leftrightarrow\$?/g, '↔')
+    .replace(/\$?\\times\$?/g, '×')
+    .replace(/\$?\\div\$?/g, '÷')
+    .replace(/\$?\\pm\$?/g, '±')
+    .replace(/\$?\\cdot\$?/g, '·')
+    .replace(/\$?\\leq\$?/g, '≤')
+    .replace(/\$?\\geq\$?/g, '≥')
+    .replace(/\$?\\neq\$?/g, '≠')
+    .replace(/\$?\\approx\$?/g, '≈')
+    .replace(/\^\\circ/g, '°')
+    .replace(/\\%/g, '%');
+}
+
 // ---------- SIMPLE MARKDOWN TO HTML ----------
 function markdownToHtml(md){
+  md = bersihkanLatex(md);
   md = md.replace(/```[a-z]*\n?/gi,'').replace(/```/g,'');
   const lines = md.split('\n');
   let html = '';
@@ -990,7 +1015,7 @@ async function downloadWord(){
     const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell,
             WidthType, ImageRun, BorderStyle, AlignmentType } = docx;
 
-    const raw = document.getElementById('resultContent').dataset.raw || document.getElementById('resultContent').innerText;
+    const raw = bersihkanLatex(document.getElementById('resultContent').dataset.raw || document.getElementById('resultContent').innerText);
     const judul = (document.getElementById('materi').value.trim() || 'Perangkat_Ajar');
     const children = [];
 
