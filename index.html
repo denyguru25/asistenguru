@@ -84,6 +84,7 @@
   .prose-doc h1{font-family:'Lexend',sans-serif;font-weight:700;font-size:1.5rem;margin:1rem 0 .5rem;color:var(--ink);border-bottom:2px solid var(--line);padding-bottom:.4rem;}
   .prose-doc h2{font-family:'Lexend',sans-serif;font-weight:700;font-size:1.2rem;margin:1.1rem 0 .5rem;color:var(--chalk-blue-dark);}
   .prose-doc h3{font-family:'Lexend',sans-serif;font-weight:600;font-size:1.05rem;margin:.9rem 0 .4rem;color:var(--slate);}
+  .prose-doc h4{font-family:'Lexend',sans-serif;font-weight:600;font-size:.96rem;margin:.75rem 0 .35rem;color:var(--slate);}
   .prose-doc p{margin:.5rem 0;line-height:1.75;color:var(--ink);}
   .prose-doc ul{list-style:disc;padding-left:1.4rem;margin:.5rem 0;}
   .prose-doc ol{list-style:decimal;padding-left:1.4rem;margin:.5rem 0;}
@@ -694,7 +695,7 @@ function buildPrompt(){
   const jp = document.getElementById('jp').value || '1';
   const menit = (parseFloat(jp)||0) * 35;
 
-  let sistem = `Anda adalah asisten AI ahli pendidikan dasar di Indonesia dengan pengalaman lebih dari 20 tahun sebagai pengembang kurikulum dan guru SD. Anda sangat menguasai standar Kurikulum Merdeka, Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), prinsip pembelajaran berdiferensiasi, dan asesmen autentik. Tulis output dalam Bahasa Indonesia baku, terstruktur rapi menggunakan format Markdown (heading #/##/###, list, tabel, bold), TANPA basa-basi pembuka atau penutup di luar dokumen yang diminta. Jangan gunakan blok kode markdown (tiga backtick) untuk membungkus jawaban. JANGAN PERNAH menggunakan notasi LaTeX/matematika (contoh yang DILARANG: $\\rightarrow$, $\\times$, $\\frac{1}{2}$, \\rightarrow, dst.) karena tidak bisa dirender dan akan tampil sebagai kode mentah. Sebagai gantinya, gunakan simbol Unicode biasa langsung di dalam teks, misalnya: panah pakai → atau -> , perkalian pakai × , pembagian pakai ÷ , pecahan tulis biasa seperti "1/2" atau "seperdua", derajat pakai ° , pangkat dua pakai ² , pangkat tiga pakai ³.`;
+  let sistem = `Anda adalah asisten AI ahli pendidikan dasar di Indonesia dengan pengalaman lebih dari 20 tahun sebagai pengembang kurikulum dan guru SD. Anda sangat menguasai standar Kurikulum Merdeka, Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), prinsip pembelajaran berdiferensiasi, dan asesmen autentik. PENTING: sejak Permendikdasmen No. 13 Tahun 2025 (berlaku mulai tahun ajaran 2025/2026), istilah "Profil Pelajar Pancasila" (6 dimensi) sudah resmi diganti menjadi "Profil Lulusan" yang terdiri dari 8 dimensi: (1) Keimanan dan Ketakwaan terhadap Tuhan YME, (2) Kewargaan, (3) Penalaran Kritis, (4) Kreativitas, (5) Kolaborasi, (6) Kemandirian, (7) Kesehatan, (8) Komunikasi. SELALU gunakan istilah "Profil Lulusan" beserta dimensi-dimensi barunya ini di setiap dokumen yang Anda buat, JANGAN lagi memakai istilah lama "Profil Pelajar Pancasila". Tulis output dalam Bahasa Indonesia baku, terstruktur rapi menggunakan format Markdown (heading #/##/###/####, list, tabel, bold), TANPA basa-basi pembuka atau penutup di luar dokumen yang diminta. Jangan gunakan blok kode markdown (tiga backtick) untuk membungkus jawaban. JANGAN PERNAH menggunakan notasi LaTeX/matematika (contoh yang DILARANG: $\\rightarrow$, $\\times$, $\\frac{1}{2}$, \\rightarrow, dst.) karena tidak bisa dirender dan akan tampil sebagai kode mentah. Sebagai gantinya, gunakan simbol Unicode biasa langsung di dalam teks, misalnya: panah pakai → atau -> , perkalian pakai × , pembagian pakai ÷ , pecahan tulis biasa seperti "1/2" atau "seperdua", derajat pakai ° , pangkat dua pakai ² , pangkat tiga pakai ³.`;
 
   let userPrompt = `Buatkan dokumen berikut untuk kebutuhan mengajar SD:\n\n`;
   userPrompt += `- Mata Pelajaran: ${mapel}\n`;
@@ -706,7 +707,7 @@ function buildPrompt(){
   if(selectedOutput === 'modul'){
     userPrompt += `JENIS DOKUMEN: Modul Ajar / RPP lengkap sesuai standar Kurikulum Merdeka.\n`;
     userPrompt += `Susun dengan struktur berikut secara lengkap dan siap pakai:\n`;
-    userPrompt += `1. Informasi Umum (Identitas modul, Kompetensi Awal, Profil Pelajar Pancasila, Sarana & Prasarana, Target Peserta Didik, Model Pembelajaran)\n`;
+    userPrompt += `1. Informasi Umum (Identitas modul, Kompetensi Awal, Profil Lulusan yang dituju, Sarana & Prasarana, Target Peserta Didik, Model Pembelajaran)\n`;
     userPrompt += `2. Komponen Inti (Tujuan Pembelajaran, Pemahaman Bermakna, Pertanyaan Pemantik)\n`;
     userPrompt += `3. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup) dengan estimasi alokasi waktu yang proporsional terhadap total ${menit} menit\n`;
     userPrompt += `4. Asesmen (Diagnostik, Formatif, Sumatif) beserta rubrik penilaian sederhana\n`;
@@ -835,6 +836,7 @@ function markdownToHtml(md){
 
     // Heading = section baru -> nomor soal reset ke 1 lagi (ini yang memang diinginkan,
     // misal pindah dari "Isian Singkat" ke "Uraian")
+    if(/^####\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h4>${inlineFmt(trimmed.replace(/^####\s+/,''))}</h4>`; continue; }
     if(/^###\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h3>${inlineFmt(trimmed.replace(/^###\s+/,''))}</h3>`; continue; }
     if(/^##\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h2>${inlineFmt(trimmed.replace(/^##\s+/,''))}</h2>`; continue; }
     if(/^#\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h1>${inlineFmt(trimmed.replace(/^#\s+/,''))}</h1>`; continue; }
@@ -1082,6 +1084,7 @@ async function downloadWord(){
       } else if(inTable){ flushTable(); }
 
       // Heading = section baru -> nomor soal reset ke 1 lagi (memang diinginkan)
+      if(/^####\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^####\s+/,''), heading: HeadingLevel.HEADING_4, spacing:{before:140} })); continue; }
       if(/^###\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^###\s+/,''), heading: HeadingLevel.HEADING_3, spacing:{before:160} })); continue; }
       if(/^##\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^##\s+/,''), heading: HeadingLevel.HEADING_2, spacing:{before:200} })); continue; }
       if(/^#\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^#\s+/,''), heading: HeadingLevel.HEADING_1, spacing:{before:200} })); continue; }
