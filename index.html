@@ -156,8 +156,8 @@
       <div class="output-type-card active rounded-xl p-4 flex items-center gap-3" data-output="modul" onclick="selectOutput('modul')">
         <i class="fa-solid fa-book-open text-xl text-[color:var(--chalk-blue-dark)]"></i>
         <div>
-          <p class="font-display font-semibold text-sm text-[color:var(--ink)]">Modul Ajar / RPP</p>
-          <p class="text-[11px] text-slate-500">Kurikulum Merdeka</p>
+          <p class="font-display font-semibold text-sm text-[color:var(--ink)]">RPP (Modul Ajar)</p>
+          <p class="text-[11px] text-slate-500">Pembelajaran Mendalam</p>
         </div>
       </div>
       <div class="output-type-card rounded-xl p-4 flex items-center gap-3" data-output="rangkuman" onclick="selectOutput('rangkuman')">
@@ -566,7 +566,7 @@ dz.addEventListener('drop', e=>{
 // ---------- RIWAYAT GENERATE (localStorage, tanpa gambar) ----------
 const RIWAYAT_KEY = 'edusearch_riwayat_v1';
 const RIWAYAT_MAX = 30;
-const OUTPUT_LABEL = { modul: 'Modul Ajar / RPP', rangkuman: 'Rangkuman / Materi', lkpd: 'LKPD' };
+const OUTPUT_LABEL = { modul: 'RPP (Modul Ajar)', rangkuman: 'Rangkuman / Materi', lkpd: 'LKPD' };
 
 function loadRiwayat(){
   try{
@@ -695,7 +695,7 @@ function buildPrompt(){
   const jp = document.getElementById('jp').value || '1';
   const menit = (parseFloat(jp)||0) * 35;
 
-  let sistem = `Anda adalah asisten AI ahli pendidikan dasar di Indonesia dengan pengalaman lebih dari 20 tahun sebagai pengembang kurikulum dan guru SD. Anda sangat menguasai standar Kurikulum Merdeka, Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), prinsip pembelajaran berdiferensiasi, dan asesmen autentik. PENTING: sejak Permendikdasmen No. 13 Tahun 2025 (berlaku mulai tahun ajaran 2025/2026), istilah "Profil Pelajar Pancasila" (6 dimensi) sudah resmi diganti menjadi "Profil Lulusan" yang terdiri dari 8 dimensi: (1) Keimanan dan Ketakwaan terhadap Tuhan YME, (2) Kewargaan, (3) Penalaran Kritis, (4) Kreativitas, (5) Kolaborasi, (6) Kemandirian, (7) Kesehatan, (8) Komunikasi. SELALU gunakan istilah "Profil Lulusan" beserta dimensi-dimensi barunya ini di setiap dokumen yang Anda buat, JANGAN lagi memakai istilah lama "Profil Pelajar Pancasila". Tulis output dalam Bahasa Indonesia baku, terstruktur rapi menggunakan format Markdown (heading #/##/###/####, list, tabel, bold), TANPA basa-basi pembuka atau penutup di luar dokumen yang diminta. Jangan gunakan blok kode markdown (tiga backtick) untuk membungkus jawaban. JANGAN PERNAH menggunakan notasi LaTeX/matematika (contoh yang DILARANG: $\\rightarrow$, $\\times$, $\\frac{1}{2}$, \\rightarrow, dst.) karena tidak bisa dirender dan akan tampil sebagai kode mentah. Sebagai gantinya, gunakan simbol Unicode biasa langsung di dalam teks, misalnya: panah pakai → atau -> , perkalian pakai × , pembagian pakai ÷ , pecahan tulis biasa seperti "1/2" atau "seperdua", derajat pakai ° , pangkat dua pakai ² , pangkat tiga pakai ³.`;
+  let sistem = `Anda adalah asisten AI ahli pendidikan dasar di Indonesia dengan pengalaman lebih dari 20 tahun sebagai pengembang kurikulum dan guru SD. Anda sangat menguasai Kurikulum Nasional terbaru dengan pendekatan Pembelajaran Mendalam (Deep Learning) sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses, termasuk Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), Kriteria Ketercapaian Tujuan Pembelajaran (KKTP), prinsip pembelajaran berdiferensiasi (kesiapan belajar peserta didik), dan asesmen autentik. PENTING: sejak Permendikdasmen No. 13 Tahun 2025 (berlaku mulai tahun ajaran 2025/2026), istilah "Profil Pelajar Pancasila" (6 dimensi) sudah resmi diganti menjadi "Profil Lulusan" yang terdiri dari 8 dimensi: (1) Keimanan dan Ketakwaan terhadap Tuhan YME, (2) Kewargaan, (3) Penalaran Kritis, (4) Kreativitas, (5) Kolaborasi, (6) Kemandirian, (7) Kesehatan, (8) Komunikasi. SELALU gunakan istilah "Profil Lulusan" beserta dimensi-dimensi barunya ini di setiap dokumen yang Anda buat, JANGAN lagi memakai istilah lama "Profil Pelajar Pancasila". Tulis output dalam Bahasa Indonesia baku, terstruktur rapi menggunakan format Markdown (heading #/##/###/####, list, tabel, bold), TANPA basa-basi pembuka atau penutup di luar dokumen yang diminta. Jangan gunakan blok kode markdown (tiga backtick) untuk membungkus jawaban. JANGAN PERNAH menggunakan notasi LaTeX/matematika (contoh yang DILARANG: $\\rightarrow$, $\\times$, $\\frac{1}{2}$, \\rightarrow, dst.) karena tidak bisa dirender dan akan tampil sebagai kode mentah. Sebagai gantinya, gunakan simbol Unicode biasa langsung di dalam teks, misalnya: panah pakai → atau -> , perkalian pakai × , pembagian pakai ÷ , pecahan tulis biasa seperti "1/2" atau "seperdua", derajat pakai ° , pangkat dua pakai ² , pangkat tiga pakai ³.`;
 
   let userPrompt = `Buatkan dokumen berikut untuk kebutuhan mengajar SD:\n\n`;
   userPrompt += `- Mata Pelajaran: ${mapel}\n`;
@@ -705,14 +705,17 @@ function buildPrompt(){
   userPrompt += `- Alokasi Waktu: ${jp} JP (${menit} menit)\n\n`;
 
   if(selectedOutput === 'modul'){
-    userPrompt += `JENIS DOKUMEN: Modul Ajar / RPP lengkap sesuai standar Kurikulum Merdeka.\n`;
+    userPrompt += `JENIS DOKUMEN: RPP (Rencana Pelaksanaan Pembelajaran) dengan pendekatan Pembelajaran Mendalam / Deep Learning, sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses (menggantikan format "Modul Ajar" Kurikulum Merdeka lama).\n`;
     userPrompt += `Susun dengan struktur berikut secara lengkap dan siap pakai:\n`;
-    userPrompt += `1. Informasi Umum (Identitas modul, Kompetensi Awal, Profil Lulusan yang dituju, Sarana & Prasarana, Target Peserta Didik, Model Pembelajaran)\n`;
-    userPrompt += `2. Komponen Inti (Tujuan Pembelajaran, Pemahaman Bermakna, Pertanyaan Pemantik)\n`;
-    userPrompt += `3. Kegiatan Pembelajaran (Pendahuluan, Inti, Penutup) dengan estimasi alokasi waktu yang proporsional terhadap total ${menit} menit\n`;
-    userPrompt += `4. Asesmen (Diagnostik, Formatif, Sumatif) beserta rubrik penilaian sederhana\n`;
-    userPrompt += `5. Pengayaan dan Remedial\n`;
-    userPrompt += `6. Lampiran singkat (Bahan bacaan guru & peserta didik ringkas)\n`;
+    userPrompt += `1. Identitas (Nama Sekolah, Mata Pelajaran, Kelas/Fase, Materi, Alokasi Waktu, Sarana & Prasarana singkat)\n`;
+    userPrompt += `2. Penguatan Dimensi Profil Lulusan (pilih 1-3 dimensi yang PALING relevan dengan materi ini dari 8 dimensi resmi: Keimanan dan Ketakwaan terhadap Tuhan YME, Kewargaan, Penalaran Kritis, Kreativitas, Kolaborasi, Kemandirian, Kesehatan, Komunikasi — jangan cantumkan semua 8, cukup yang relevan saja beserta alasan singkat pemilihannya)\n`;
+    userPrompt += `3. Tujuan Pembelajaran (TP) dan Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) — KKTP harus terukur dan jelas indikator keberhasilannya\n`;
+    userPrompt += `4. Karakter Murid (hasil pemetaan asesmen awal/kesiapan belajar peserta didik terhadap materi ini, dan bagaimana ini memengaruhi pemilihan model & strategi pembelajaran)\n`;
+    userPrompt += `5. Kerangka Pembelajaran Mendalam (4 pilar resmi, jelaskan penerapannya untuk materi ini): (a) Praktik Pedagogis — model pembelajaran yang dipilih beserta ALASAN kenapa model itu cocok untuk materi & kesiapan siswa; (b) Lingkungan Pembelajaran — mencakup ruang fisik, ruang virtual, dan budaya belajar yang mendukung; (c) Kemitraan Pembelajaran — pihak yang dilibatkan (orang tua/komunitas/narasumber) jika relevan; (d) Pemanfaatan Digital — teknologi/media digital yang dipakai jika relevan\n`;
+    userPrompt += `6. Langkah-langkah Pembelajaran (Sintak) mengikuti alur Pengalaman Belajar: Memahami → Mengaplikasi → Merefleksi, dengan estimasi alokasi waktu yang proporsional terhadap total ${menit} menit\n`;
+    userPrompt += `7. Instrumen Asesmen Pembelajaran: Asesmen Formatif (selama proses) dan Asesmen Sumatif (akhir pembelajaran), beserta rubrik penilaian sederhana\n`;
+    userPrompt += `8. Program Remedial dan Pengayaan\n`;
+    userPrompt += `9. Lampiran singkat (ringkasan bahan bacaan guru & peserta didik)\n`;
   } else if(selectedOutput === 'rangkuman'){
     userPrompt += `JENIS DOKUMEN: Rangkuman / Materi Ajar untuk dibagikan ke peserta didik dan dijadikan pegangan guru.\n`;
     userPrompt += `Susun dengan struktur:\n`;
