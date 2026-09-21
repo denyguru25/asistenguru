@@ -213,13 +213,136 @@
       </div>
       <div>
         <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Alokasi Waktu (JP)</label>
-        <div class="mt-1 flex items-center gap-2">
+        <div class="mt-1 flex items-center gap-2 flex-wrap">
           <input type="number" id="jp" min="1" value="2" oninput="hitungMenit()" class="w-24 border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
           <span class="text-sm text-slate-500">JP</span>
           <i class="fa-solid fa-arrow-right-long text-slate-300"></i>
           <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
             <i class="fa-regular fa-clock text-amber-600 text-sm"></i>
             <span class="text-sm font-semibold text-amber-800" id="menitLabel">70 menit</span>
+          </div>
+        </div>
+        <div class="mt-2 flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-slate-500">Jumlah Pertemuan</span>
+          <input type="number" id="pertemuan" min="1" value="1" oninput="hitungMenit()" class="w-16 border border-[color:var(--line)] rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+          <span class="text-xs text-slate-400" id="jpPerPertemuanLabel"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RPM (RPP) SUB SETTINGS -->
+    <div id="rpmSettings" class="mt-6 pt-6 border-t border-dashed border-[color:var(--line)] space-y-5">
+      <p class="font-display font-semibold text-sm text-[color:var(--ink)] flex items-center gap-2">
+        <i class="fa-solid fa-sliders text-[color:var(--chalk-blue)]"></i> Pengaturan Rencana Pembelajaran Mendalam (RPM)
+      </p>
+
+      <!-- Profil Lulusan -->
+      <div>
+        <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Penguatan Dimensi Profil Lulusan</label>
+          <label class="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer">
+            <input type="checkbox" id="profilAiPilih" checked onchange="toggleProfilAiPilih()">
+            AI yang pilihkan
+          </label>
+        </div>
+        <div id="profilLulusanGroup" class="hidden flex flex-wrap gap-2">
+          <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Keimanan dan Ketakwaan terhadap Tuhan YME"><span>Keimanan & Ketakwaan</span></label>
+          <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Kewargaan"><span>Kewargaan</span></label>
+          <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Penalaran Kritis"><span>Penalaran Kritis</span></label>
+          <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Kreativitas"><span>Kreativitas</span></label>
+          <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Kolaborasi"><span>Kolaborasi</span></label>
+          <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Kemandirian"><span>Kemandirian</span></label>
+          <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Kesehatan"><span>Kesehatan</span></label>
+          <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Komunikasi"><span>Komunikasi</span></label>
+        </div>
+        <p id="profilAiPilihNote" class="text-[11px] text-slate-400">AI akan memilih 1-3 dimensi paling relevan dengan materi ini.</p>
+      </div>
+
+      <!-- Karakter Murid -->
+      <div>
+        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Karakter Murid / Kesiapan Belajar <span class="text-slate-400 font-normal normal-case">(Opsional)</span></label>
+        <textarea id="karakterMurid" rows="3" placeholder="Contoh: Sebagian besar siswa sudah paham konsep dasar X tapi belum bisa Y. Minat tinggi ke kegiatan praktik langsung. Gaya belajar dominan visual/kinestetik.&#10;(Kosongkan jika belum sempat asesmen awal — AI akan buatkan asumsi umum yang wajar)" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white resize-none"></textarea>
+      </div>
+
+      <!-- Kerangka Pembelajaran Mendalam -->
+      <div>
+        <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2.5">Kerangka Pembelajaran Mendalam (4 Pilar)</p>
+
+        <!-- 1. Praktik Pedagogis -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+            <span class="text-xs text-slate-600 font-medium">1. Praktik Pedagogis (Model)</span>
+            <label class="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer">
+              <input type="checkbox" id="pedagogisAiPilih" checked onchange="togglePedagogisAiPilih()">
+              AI yang pilihkan
+            </label>
+          </div>
+          <div id="pedagogisGroup" class="hidden">
+            <div class="flex flex-wrap gap-2" id="pedagogisChipGroup">
+              <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Problem Based Learning (PBL)"><span>PBL</span></label>
+              <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Project Based Learning (PjBL)"><span>PjBL</span></label>
+              <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Discovery Learning"><span>Discovery Learning</span></label>
+              <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Inquiry Learning"><span>Inquiry Learning</span></label>
+              <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Cooperative Learning"><span>Cooperative Learning</span></label>
+              <label class="chip rounded-full px-3 py-1.5 text-xs font-medium flex items-center gap-1.5"><input type="checkbox" class="hidden" value="Direct Instruction"><span>Direct Instruction</span></label>
+            </div>
+            <input type="text" id="pedagogisLainnya" placeholder="Atau tulis model lain di sini..." class="mt-2 w-full border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+          </div>
+        </div>
+
+        <!-- 2. Lingkungan Pembelajaran -->
+        <div class="mb-4">
+          <span class="text-xs text-slate-600 font-medium block mb-1.5">2. Lingkungan Pembelajaran</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="text-[11px] text-slate-500">Ruang Fisik</label>
+              <select id="ruangFisik" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm bg-white">
+                <option value="AI pilihkan">AI pilihkan</option>
+                <option value="Kelas biasa">Kelas biasa</option>
+                <option value="Outdoor">Outdoor</option>
+                <option value="Laboratorium">Laboratorium</option>
+                <option value="Kunjungan lapangan">Kunjungan lapangan</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-500">Ruang Virtual</label>
+              <select id="ruangVirtual" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm bg-white">
+                <option value="Tidak digunakan">Tidak digunakan</option>
+                <option value="Platform daring (Google Classroom/dll)">Platform daring (Google Classroom/dll)</option>
+                <option value="Kelas maya">Kelas maya</option>
+                <option value="AI pilihkan">AI pilihkan</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-2.5">
+            <label class="text-[11px] text-slate-500">Budaya Belajar (opsional)</label>
+            <input type="text" id="budayaBelajar" placeholder="Contoh: kolaboratif, reflektif, kompetitif-sehat" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white">
+          </div>
+        </div>
+
+        <!-- 3. Kemitraan Pembelajaran -->
+        <div class="mb-4">
+          <label class="text-[11px] text-slate-500 block mb-1">3. Kemitraan Pembelajaran (Opsional)</label>
+          <select id="kemitraan" class="w-full border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm bg-white">
+            <option value="">Tidak relevan / tidak digunakan</option>
+            <option value="Orang tua">Orang tua</option>
+            <option value="Komunitas/tokoh masyarakat">Komunitas/tokoh masyarakat</option>
+            <option value="Narasumber tamu">Narasumber tamu</option>
+            <option value="Kolaborasi antar-guru">Kolaborasi antar-guru</option>
+            <option value="AI pilihkan">AI pilihkan</option>
+          </select>
+        </div>
+
+        <!-- 4. Pemanfaatan Digital -->
+        <div>
+          <label class="text-[11px] text-slate-500 block mb-1.5">4. Pemanfaatan Digital</label>
+          <div class="flex items-center gap-3 mb-2.5">
+            <div class="toggle-outer" id="digitalTersediaToggle" onclick="toggleDigitalTersedia()"><div class="toggle-dot"></div></div>
+            <label class="text-xs text-slate-700 cursor-pointer" onclick="toggleDigitalTersedia()">Sekolah punya akses internet/proyektor/IFP</label>
+          </div>
+          <div id="digitalLinkWrap" class="hidden">
+            <label class="text-[11px] text-slate-500">Link Media Pembelajaran (opsional)</label>
+            <textarea id="digitalLink" rows="2" placeholder="Opsional — tulis nama alat + link, misal:&#10;Kahoot: https://kahoot.it/xxx (kuis pembuka)&#10;Quizizz: https://quizizz.com/xxx (evaluasi akhir)" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white resize-none"></textarea>
           </div>
         </div>
       </div>
@@ -347,6 +470,12 @@
   <!-- RESULT PANEL -->
   <div id="resultPanel" class="hidden mt-8">
     <div class="paper-card rounded-2xl overflow-hidden">
+      <div id="lkpdShortcutBanner" class="hidden bg-amber-50 border-b border-amber-200 px-5 py-3 flex items-center justify-between flex-wrap gap-2">
+        <p class="text-xs text-amber-800"><i class="fa-solid fa-lightbulb mr-1"></i> RPP selesai! Mau sekalian buat LKPD untuk materi yang sama?</p>
+        <button onclick="generateLkpdDariRpp()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition flex-shrink-0">
+          <i class="fa-solid fa-arrow-right"></i> Generate LKPD untuk materi ini
+        </button>
+      </div>
       <div class="bg-[color:var(--chalk-blue-dark)] px-5 py-3 flex items-center justify-between flex-wrap gap-2">
         <p class="text-white font-display font-semibold text-sm flex items-center gap-2">
           <i class="fa-solid fa-file-circle-check text-amber-300"></i> Hasil Generasi
@@ -415,7 +544,7 @@
 
 <script>
 let selectedOutput = 'modul';
-const chipGroups = ['jenisSoalGroup','kesulitanGroup'];
+const chipGroups = ['jenisSoalGroup','kesulitanGroup','profilLulusanGroup','pedagogisChipGroup'];
 
 chipGroups.forEach(id=>{
   document.getElementById(id).querySelectorAll('label.chip').forEach(lbl=>{
@@ -435,16 +564,48 @@ function selectOutput(type){
     el.classList.toggle('active', el.dataset.output === type);
   });
   document.getElementById('lkpdSettings').classList.toggle('hidden', type !== 'lkpd');
+  document.getElementById('rpmSettings').classList.toggle('hidden', type !== 'modul');
+}
+
+function generateLkpdDariRpp(){
+  selectOutput('lkpd');
+  document.getElementById('lkpdShortcutBanner').classList.add('hidden');
+  document.querySelector('.search-shell').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function hitungMenit(){
   const jp = parseFloat(document.getElementById('jp').value) || 0;
   document.getElementById('menitLabel').textContent = (jp * 35) + ' menit';
+  const pertemuan = parseFloat(document.getElementById('pertemuan').value) || 1;
+  const label = document.getElementById('jpPerPertemuanLabel');
+  if(pertemuan > 1 && jp > 0){
+    const rata = (jp / pertemuan);
+    label.textContent = `≈ ${rata % 1 === 0 ? rata : rata.toFixed(1)} JP/pertemuan`;
+  } else {
+    label.textContent = '';
+  }
 }
 hitungMenit();
 
 function toggleKunci(){
   document.getElementById('kunciToggle').classList.toggle('on');
+}
+
+// ---------- TOGGLE RPM: PROFIL LULUSAN, PRAKTIK PEDAGOGIS, PEMANFAATAN DIGITAL ----------
+function toggleProfilAiPilih(){
+  const aiPilih = document.getElementById('profilAiPilih').checked;
+  document.getElementById('profilLulusanGroup').classList.toggle('hidden', aiPilih);
+  document.getElementById('profilAiPilihNote').classList.toggle('hidden', !aiPilih);
+}
+function togglePedagogisAiPilih(){
+  const aiPilih = document.getElementById('pedagogisAiPilih').checked;
+  document.getElementById('pedagogisGroup').classList.toggle('hidden', aiPilih);
+}
+function toggleDigitalTersedia(){
+  const toggle = document.getElementById('digitalTersediaToggle');
+  toggle.classList.toggle('on');
+  const tersedia = toggle.classList.contains('on');
+  document.getElementById('digitalLinkWrap').classList.toggle('hidden', !tersedia);
 }
 
 // ---------- MODE JUMLAH SOAL (Total vs Per Jenis) ----------
@@ -694,6 +855,7 @@ function buildPrompt(){
   const tp = document.getElementById('tp').value.trim() || '(belum diisi)';
   const jp = document.getElementById('jp').value || '1';
   const menit = (parseFloat(jp)||0) * 35;
+  const pertemuan = document.getElementById('pertemuan').value || '1';
 
   let sistem = `Anda adalah asisten AI ahli pendidikan dasar di Indonesia dengan pengalaman lebih dari 20 tahun sebagai pengembang kurikulum dan guru SD. Anda sangat menguasai Kurikulum Nasional terbaru dengan pendekatan Pembelajaran Mendalam (Deep Learning) sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses, termasuk Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), Kriteria Ketercapaian Tujuan Pembelajaran (KKTP), prinsip pembelajaran berdiferensiasi (kesiapan belajar peserta didik), dan asesmen autentik. PENTING: sejak Permendikdasmen No. 13 Tahun 2025 (berlaku mulai tahun ajaran 2025/2026), istilah "Profil Pelajar Pancasila" (6 dimensi) sudah resmi diganti menjadi "Profil Lulusan" yang terdiri dari 8 dimensi: (1) Keimanan dan Ketakwaan terhadap Tuhan YME, (2) Kewargaan, (3) Penalaran Kritis, (4) Kreativitas, (5) Kolaborasi, (6) Kemandirian, (7) Kesehatan, (8) Komunikasi. SELALU gunakan istilah "Profil Lulusan" beserta dimensi-dimensi barunya ini di setiap dokumen yang Anda buat, JANGAN lagi memakai istilah lama "Profil Pelajar Pancasila". Tulis output dalam Bahasa Indonesia baku, terstruktur rapi menggunakan format Markdown (heading #/##/###/####, list, tabel, bold), TANPA basa-basi pembuka atau penutup di luar dokumen yang diminta. Jangan gunakan blok kode markdown (tiga backtick) untuk membungkus jawaban. JANGAN PERNAH menggunakan notasi LaTeX/matematika (contoh yang DILARANG: $\\rightarrow$, $\\times$, $\\frac{1}{2}$, \\rightarrow, dst.) karena tidak bisa dirender dan akan tampil sebagai kode mentah. Sebagai gantinya, gunakan simbol Unicode biasa langsung di dalam teks, misalnya: panah pakai → atau -> , perkalian pakai × , pembagian pakai ÷ , pecahan tulis biasa seperti "1/2" atau "seperdua", derajat pakai ° , pangkat dua pakai ² , pangkat tiga pakai ³.`;
 
@@ -705,17 +867,81 @@ function buildPrompt(){
   userPrompt += `- Alokasi Waktu: ${jp} JP (${menit} menit)\n\n`;
 
   if(selectedOutput === 'modul'){
-    userPrompt += `JENIS DOKUMEN: RPP (Rencana Pelaksanaan Pembelajaran) dengan pendekatan Pembelajaran Mendalam / Deep Learning, sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses (menggantikan format "Modul Ajar" Kurikulum Merdeka lama).\n`;
-    userPrompt += `Susun dengan struktur berikut secara lengkap dan siap pakai:\n`;
-    userPrompt += `1. Identitas (Nama Sekolah, Mata Pelajaran, Kelas/Fase, Materi, Alokasi Waktu, Sarana & Prasarana singkat)\n`;
-    userPrompt += `2. Penguatan Dimensi Profil Lulusan (pilih 1-3 dimensi yang PALING relevan dengan materi ini dari 8 dimensi resmi: Keimanan dan Ketakwaan terhadap Tuhan YME, Kewargaan, Penalaran Kritis, Kreativitas, Kolaborasi, Kemandirian, Kesehatan, Komunikasi — jangan cantumkan semua 8, cukup yang relevan saja beserta alasan singkat pemilihannya)\n`;
-    userPrompt += `3. Tujuan Pembelajaran (TP) dan Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) — KKTP harus terukur dan jelas indikator keberhasilannya\n`;
-    userPrompt += `4. Karakter Murid (hasil pemetaan asesmen awal/kesiapan belajar peserta didik terhadap materi ini, dan bagaimana ini memengaruhi pemilihan model & strategi pembelajaran)\n`;
-    userPrompt += `5. Kerangka Pembelajaran Mendalam (4 pilar resmi, jelaskan penerapannya untuk materi ini): (a) Praktik Pedagogis — model pembelajaran yang dipilih beserta ALASAN kenapa model itu cocok untuk materi & kesiapan siswa; (b) Lingkungan Pembelajaran — mencakup ruang fisik, ruang virtual, dan budaya belajar yang mendukung; (c) Kemitraan Pembelajaran — pihak yang dilibatkan (orang tua/komunitas/narasumber) jika relevan; (d) Pemanfaatan Digital — teknologi/media digital yang dipakai jika relevan\n`;
-    userPrompt += `6. Langkah-langkah Pembelajaran (Sintak) mengikuti alur Pengalaman Belajar: Memahami → Mengaplikasi → Merefleksi, dengan estimasi alokasi waktu yang proporsional terhadap total ${menit} menit\n`;
-    userPrompt += `7. Instrumen Asesmen Pembelajaran: Asesmen Formatif (selama proses) dan Asesmen Sumatif (akhir pembelajaran), beserta rubrik penilaian sederhana\n`;
-    userPrompt += `8. Program Remedial dan Pengayaan\n`;
-    userPrompt += `9. Lampiran singkat (ringkasan bahan bacaan guru & peserta didik)\n`;
+    // Ambil semua nilai form RPM
+    const profilAiPilih = document.getElementById('profilAiPilih').checked;
+    let profilLulusanText;
+    if(profilAiPilih){
+      profilLulusanText = 'AI BEBAS memilih 1-3 dimensi yang PALING relevan dengan materi ini dari 8 dimensi resmi berikut: Keimanan dan Ketakwaan terhadap Tuhan YME, Kewargaan, Penalaran Kritis, Kreativitas, Kolaborasi, Kemandirian, Kesehatan, Komunikasi. Sertakan alasan singkat pemilihannya.';
+    } else {
+      const dipilihProfil = [...document.querySelectorAll('#profilLulusanGroup input:checked')].map(i=>i.value);
+      profilLulusanText = dipilihProfil.length
+        ? `Guru SUDAH MEMILIH dimensi berikut, WAJIB dipakai persis (jangan diganti/ditambah dimensi lain): ${dipilihProfil.join(', ')}. Jelaskan penerapannya untuk materi ini.`
+        : 'Guru belum memilih dimensi spesifik, AI BEBAS memilih 1-3 dimensi paling relevan dari 8 dimensi resmi.';
+    }
+
+    const pedagogisAiPilih = document.getElementById('pedagogisAiPilih').checked;
+    let pedagogisText;
+    if(pedagogisAiPilih){
+      pedagogisText = 'AI BEBAS memilih model pembelajaran (Praktik Pedagogis) yang PALING sesuai dengan materi, kesiapan siswa, dan alokasi waktu.';
+    } else {
+      const dipilihModel = [...document.querySelectorAll('#pedagogisChipGroup input:checked')].map(i=>i.value);
+      const modelLainnya = document.getElementById('pedagogisLainnya').value.trim();
+      if(modelLainnya) dipilihModel.push(modelLainnya);
+      pedagogisText = dipilihModel.length
+        ? `Guru SUDAH MEMILIH model pembelajaran berikut, WAJIB dipakai: ${dipilihModel.join(', ')}.`
+        : 'Guru belum memilih model spesifik, AI BEBAS memilih yang paling sesuai.';
+    }
+
+    const ruangFisik = document.getElementById('ruangFisik').value;
+    const ruangVirtual = document.getElementById('ruangVirtual').value;
+    const budayaBelajar = document.getElementById('budayaBelajar').value.trim();
+    const kemitraan = document.getElementById('kemitraan').value;
+    const digitalTersedia = document.getElementById('digitalTersediaToggle').classList.contains('on');
+    const digitalLink = document.getElementById('digitalLink').value.trim();
+    const karakterMurid = document.getElementById('karakterMurid').value.trim();
+    const jumlahPertemuan = parseInt(pertemuan) || 1;
+
+    userPrompt += `JENIS DOKUMEN: RPP (Rencana Pelaksanaan Pembelajaran) dengan pendekatan Pembelajaran Mendalam / Deep Learning (RPM), sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses.\n`;
+    userPrompt += `Jumlah Pertemuan: ${pertemuan}${jumlahPertemuan>1 ? ' (WAJIB pecah bagian Langkah-langkah Pembelajaran secara EKSPLISIT per pertemuan, misal "Pertemuan 1: ...", "Pertemuan 2: ...", JANGAN ditulis sebagai satu sesi panjang tanpa jeda)' : ''}\n\n`;
+    userPrompt += `Susun dengan struktur berikut secara lengkap dan siap pakai:\n\n`;
+
+    userPrompt += `1. IDENTITAS (Nama Sekolah, Mata Pelajaran, Kelas/Fase, Materi, Alokasi Waktu, Sarana & Prasarana singkat)\n\n`;
+
+    userPrompt += `2. PENGUATAN DIMENSI PROFIL LULUSAN\n${profilLulusanText}\n\n`;
+
+    userPrompt += `3. TUJUAN PEMBELAJARAN (TP) DAN KRITERIA KETERCAPAIAN TUJUAN PEMBELAJARAN (KKTP)\n`;
+    userPrompt += `TP: Tulis HANYA 1 kalimat TP per tujuan, di level kognitif TERTINGGI yang relevan (Taksonomi Bloom, MINIMAL C3-Menerapkan, IDEALNYA C4-C6 yaitu Menganalisis/Mengevaluasi/Mencipta agar benar-benar HOTS/pembelajaran mendalam). JANGAN tulis TP terpisah untuk tiap level kognitif (C1/C2/C3) karena level tertinggi yang dipilih sudah otomatis mencakup/mempersyaratkan level di bawahnya.\n`;
+    userPrompt += `KKTP: Susun sebagai BEBERAPA indikator/kriteria konkret (bukan 1 kalimat seperti TP) yang membuktikan TP tercapai. Indikator ini BOLEH mencakup kemampuan pendukung di level kognitif lebih rendah dari TP (karena fungsinya sebagai tangga bukti menuju TP, bukan pengulangan TP). Gunakan format Rubrik Penilaian (4-5 kriteria) atau Indikator Asesmen (boleh gabungan keduanya). JANGAN gunakan angka mutlak (misal "75", "80") sebagai kriteria kelulusan — gunakan deskripsi kemampuan, atau interval nilai jika memang perlu angka.\n\n`;
+
+    userPrompt += `4. KARAKTER MURID (KESIAPAN BELAJAR)\n`;
+    userPrompt += karakterMurid
+      ? `${karakterMurid}\n\n`
+      : `Guru belum mengisi data spesifik. Buatkan ASUMSI karakteristik yang umum dan wajar untuk siswa kelas ${kelas} SD pada materi "${materi}" ini (mencakup kesiapan belajar/pengetahuan prasyarat, minat & motivasi, dan profil/gaya belajar).\n\n`;
+
+    userPrompt += `5. KERANGKA PEMBELAJARAN MENDALAM (4 Pilar resmi — jelaskan PENERAPAN KONKRETNYA untuk materi ini, BUKAN sekadar menyebut nama pilarnya):\n`;
+    userPrompt += `(a) Praktik Pedagogis: ${pedagogisText}\n`;
+    userPrompt += `(b) Lingkungan Pembelajaran: Ruang Fisik = ${ruangFisik === 'AI pilihkan' ? 'AI BEBAS memilih yang paling sesuai' : ruangFisik}; Ruang Virtual = ${ruangVirtual === 'AI pilihkan' ? 'AI BEBAS memilih yang paling sesuai' : ruangVirtual}${budayaBelajar ? '; Budaya Belajar yang dibangun = ' + budayaBelajar : '; Budaya Belajar = AI BEBAS tentukan suasana kelas yang sesuai (misal kolaboratif/reflektif)'}\n`;
+    userPrompt += `(c) Kemitraan Pembelajaran: ${kemitraan === '' ? 'Tidak relevan untuk materi ini, boleh dilewati atau disebutkan singkat saja' : (kemitraan === 'AI pilihkan' ? 'AI BEBAS memilih pihak yang relevan jika ada' : kemitraan)}\n`;
+    userPrompt += `(d) Pemanfaatan Digital: ${digitalTersedia ? 'Sekolah punya akses internet/proyektor/IFP, WAJIB manfaatkan teknologi digital yang relevan untuk materi ini' : 'Sekolah TIDAK punya akses internet/proyektor/IFP, JANGAN sarankan alat digital apa pun, fokus pada metode manual/non-digital'}`;
+    if(digitalTersedia && digitalLink){
+      userPrompt += `. Guru sudah menyiapkan media digital berikut, WAJIB disisipkan di bagian yang relevan (baik di poin ini maupun di Langkah-langkah Pembelajaran saat dipakai), tuliskan link-nya dalam format markdown [nama media](link) supaya bisa diklik:\n${digitalLink}`;
+    }
+    userPrompt += `\n\n`;
+
+    userPrompt += `6. LANGKAH-LANGKAH PEMBELAJARAN (SINTAK)\n`;
+    userPrompt += `Ikuti alur Pengalaman Belajar 3 tahap: Memahami → Mengaplikasi → Merefleksi, dengan estimasi alokasi waktu proporsional terhadap total ${menit} menit${jumlahPertemuan>1 ? ` dibagi ke ${pertemuan} pertemuan` : ''}.\n`;
+    userPrompt += `WAJIB rancang aktivitas KONKRET (bukan cuma menyebut label level kognitifnya) yang menunjukkan progresi tangga kognitif menuju TP:\n`;
+    userPrompt += `- Tahap Memahami: aktivitas nyata yang melatih C1 (mengingat fakta/konsep dasar) DAN C2 (menjelaskan/memahami dengan kata sendiri)\n`;
+    userPrompt += `- Tahap Mengaplikasi: aktivitas nyata C3 (menerapkan konsep pada soal/kasus nyata)\n`;
+    userPrompt += `- Tahap Merefleksi: aktivitas nyata yang mengarah ke pencapaian level TP yang dituliskan (C4/C5/C6)\n\n`;
+
+    userPrompt += `7. INSTRUMEN ASESMEN PEMBELAJARAN\n`;
+    userPrompt += `Tentukan bentuk Asesmen Formatif (selama proses) dan Asesmen Sumatif (akhir pembelajaran) yang BENAR-BENAR SELARAS dengan model pembelajaran (Praktik Pedagogis) di poin 5(a) — prinsip asesmen autentik/constructive alignment. Contoh: kalau model PjBL/PBL gunakan portofolio/produk/presentasi (BUKAN tes pilihan ganda); kalau model inkuiri/eksperimen gunakan jurnal investigasi/laporan proses. Hindari tes tertulis konvensional kecuali memang paling sesuai dengan konteks materi. Sertakan rubrik penilaian sederhana.\n\n`;
+
+    userPrompt += `8. PROGRAM REMEDIAL DAN PENGAYAAN\n\n`;
+
+    userPrompt += `9. LAMPIRAN\n`;
+    userPrompt += `Cukup tulis referensi singkat, CONTOH: "LKPD untuk materi ini dapat digenerate terpisah menggunakan fitur LKPD pada aplikasi ini, dengan TP yang sama." JANGAN menulis LKPD lengkap di bagian ini.\n`;
   } else if(selectedOutput === 'rangkuman'){
     userPrompt += `JENIS DOKUMEN: Rangkuman / Materi Ajar untuk dibagikan ke peserta didik dan dijadikan pegangan guru.\n`;
     userPrompt += `Susun dengan struktur:\n`;
@@ -817,9 +1043,24 @@ function markdownToHtml(md){
     tableRows = []; inTable = false;
   }
   function inlineFmt(t){
-    return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-            .replace(/\*(.+?)\*/g,'<em>$1</em>')
-            .replace(/`(.+?)`/g,'<code>$1</code>');
+    const linkPlaceholders = [];
+    // 1) link markdown [teks](url)
+    let out = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (m, teks, url) => {
+      const token = `%%LINK${linkPlaceholders.length}%%`;
+      linkPlaceholders.push(`<a href="${url}" target="_blank" rel="noopener" class="text-[color:var(--chalk-blue)] underline hover:text-[color:var(--chalk-blue-dark)]">${teks}</a>`);
+      return token;
+    });
+    // 2) link polos (http/https tanpa markdown)
+    out = out.replace(/(https?:\/\/[^\s<]+)/g, (m, url) => {
+      const token = `%%LINK${linkPlaceholders.length}%%`;
+      linkPlaceholders.push(`<a href="${url}" target="_blank" rel="noopener" class="text-[color:var(--chalk-blue)] underline hover:text-[color:var(--chalk-blue-dark)]">${url}</a>`);
+      return token;
+    });
+    out = out.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+             .replace(/\*(.+?)\*/g,'<em>$1</em>')
+             .replace(/`(.+?)`/g,'<code>$1</code>');
+    linkPlaceholders.forEach((h, i)=>{ out = out.replace(`%%LINK${i}%%`, h); });
+    return out;
   }
 
   for(let raw of lines){
@@ -923,7 +1164,7 @@ async function generateContent(){
         contents: [
           { role: 'user', parts: parts }
         ],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
+        generationConfig: { temperature: 0.7, maxOutputTokens: 16384 }
       })
     });
 
@@ -956,6 +1197,7 @@ async function generateContent(){
     document.getElementById('resultContent').innerHTML = finalHtml;
     document.getElementById('resultContent').dataset.raw = text;
     document.getElementById('resultPanel').classList.remove('hidden');
+    document.getElementById('lkpdShortcutBanner').classList.toggle('hidden', selectedOutput !== 'modul');
     document.getElementById('resultPanel').scrollIntoView({ behavior:'smooth', block:'start' });
 
     simpanKeRiwayat(text); // otomatis simpan ke riwayat setiap generate berhasil
@@ -993,15 +1235,36 @@ function copyText(){
 
 // ---------- GENERATE FILE .DOCX ASLI (docx.js) ----------
 function parseInlineRunsDocx(text, forceBold=false){
-  const { TextRun } = docx;
-  const parts = text.split(/(\*\*.+?\*\*)/g).filter(p=>p!=='');
-  if(parts.length===0) return [new TextRun({ text: '', bold: forceBold })];
-  return parts.map(p=>{
-    if(/^\*\*(.+)\*\*$/.test(p)){
-      return new TextRun({ text: p.replace(/^\*\*|\*\*$/g,''), bold:true });
+  const { TextRun, ExternalHyperlink } = docx;
+  // Pecah dulu berdasarkan link markdown [teks](url) atau link polos, baru proses bold di tiap segmen teks biasa
+  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g;
+  const segments = [];
+  let lastIndex = 0, match;
+  while((match = linkRegex.exec(text)) !== null){
+    if(match.index > lastIndex){ segments.push({ type:'text', value: text.slice(lastIndex, match.index) }); }
+    if(match[1] !== undefined){ segments.push({ type:'link', label: match[1], url: match[2] }); }
+    else { segments.push({ type:'link', label: match[3], url: match[3] }); }
+    lastIndex = linkRegex.lastIndex;
+  }
+  if(lastIndex < text.length){ segments.push({ type:'text', value: text.slice(lastIndex) }); }
+  if(segments.length === 0) return [new TextRun({ text: '', bold: forceBold })];
+
+  const runs = [];
+  segments.forEach(seg=>{
+    if(seg.type === 'link'){
+      runs.push(new ExternalHyperlink({
+        children: [ new TextRun({ text: seg.label, color: '2B5DAA', underline: {} }) ],
+        link: seg.url,
+      }));
+    } else {
+      const parts = seg.value.split(/(\*\*.+?\*\*)/g).filter(p=>p!=='');
+      parts.forEach(p=>{
+        if(/^\*\*(.+)\*\*$/.test(p)){ runs.push(new TextRun({ text: p.replace(/^\*\*|\*\*$/g,''), bold:true })); }
+        else { runs.push(new TextRun({ text: p, bold: forceBold })); }
+      });
     }
-    return new TextRun({ text: p, bold: forceBold });
   });
+  return runs;
 }
 
 async function downloadWord(){
