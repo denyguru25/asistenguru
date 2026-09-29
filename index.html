@@ -903,22 +903,24 @@ function buildPrompt(){
 
     userPrompt += `JENIS DOKUMEN: RPP (Rencana Pelaksanaan Pembelajaran) dengan pendekatan Pembelajaran Mendalam / Deep Learning (RPM), sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses.\n`;
     userPrompt += `Jumlah Pertemuan: ${pertemuan}${jumlahPertemuan>1 ? ' (WAJIB pecah bagian Langkah-langkah Pembelajaran secara EKSPLISIT per pertemuan, misal "Pertemuan 1: ...", "Pertemuan 2: ...", JANGAN ditulis sebagai satu sesi panjang tanpa jeda)' : ''}\n\n`;
+    userPrompt += `ATURAN FORMAT WAJIB: Kesembilan judul komponen RPP di bawah ini (Identitas, Penguatan Dimensi Profil Lulusan, dst.) HARUS ditulis PERSIS sebagai heading Markdown level 2 (diawali "## "), CONTOH: "## 1. Identitas". JANGAN tulis judul-judul ini sebagai teks bernomor biasa tanpa tanda "##", karena akan tertukar secara visual dengan penomoran soal/indikator di dalam dokumen. Salin persis tanda "##" pada setiap judul poin 1 sampai 9 di bawah ini.\n\n`;
     userPrompt += `Susun dengan struktur berikut secara lengkap dan siap pakai:\n\n`;
 
-    userPrompt += `1. IDENTITAS (Nama Sekolah, Mata Pelajaran, Kelas/Fase, Materi, Alokasi Waktu, Sarana & Prasarana singkat)\n\n`;
+    userPrompt += `## 1. Identitas\nNama Sekolah, Mata Pelajaran, Kelas/Fase, Materi, Alokasi Waktu, Sarana & Prasarana singkat\n\n`;
 
-    userPrompt += `2. PENGUATAN DIMENSI PROFIL LULUSAN\n${profilLulusanText}\n\n`;
+    userPrompt += `## 2. Penguatan Dimensi Profil Lulusan\n${profilLulusanText}\n\n`;
 
-    userPrompt += `3. TUJUAN PEMBELAJARAN (TP) DAN KRITERIA KETERCAPAIAN TUJUAN PEMBELAJARAN (KKTP)\n`;
+    userPrompt += `## 3. Tujuan Pembelajaran (TP) dan Kriteria Ketercapaian Tujuan Pembelajaran (KKTP)\n`;
     userPrompt += `TP: Tulis HANYA 1 kalimat TP per tujuan, di level kognitif TERTINGGI yang relevan (Taksonomi Bloom, MINIMAL C3-Menerapkan, IDEALNYA C4-C6 yaitu Menganalisis/Mengevaluasi/Mencipta agar benar-benar HOTS/pembelajaran mendalam). JANGAN tulis TP terpisah untuk tiap level kognitif (C1/C2/C3) karena level tertinggi yang dipilih sudah otomatis mencakup/mempersyaratkan level di bawahnya.\n`;
     userPrompt += `KKTP: Susun sebagai BEBERAPA indikator/kriteria konkret (bukan 1 kalimat seperti TP) yang membuktikan TP tercapai. Indikator ini BOLEH mencakup kemampuan pendukung di level kognitif lebih rendah dari TP (karena fungsinya sebagai tangga bukti menuju TP, bukan pengulangan TP). Gunakan format Rubrik Penilaian (4-5 kriteria) atau Indikator Asesmen (boleh gabungan keduanya). JANGAN gunakan angka mutlak (misal "75", "80") sebagai kriteria kelulusan — gunakan deskripsi kemampuan, atau interval nilai jika memang perlu angka.\n\n`;
 
-    userPrompt += `4. KARAKTER MURID (KESIAPAN BELAJAR)\n`;
+    userPrompt += `## 4. Karakter Murid (Kesiapan Belajar)\n`;
     userPrompt += karakterMurid
       ? `${karakterMurid}\n\n`
       : `Guru belum mengisi data spesifik. Buatkan ASUMSI karakteristik yang umum dan wajar untuk siswa kelas ${kelas} SD pada materi "${materi}" ini (mencakup kesiapan belajar/pengetahuan prasyarat, minat & motivasi, dan profil/gaya belajar).\n\n`;
 
-    userPrompt += `5. KERANGKA PEMBELAJARAN MENDALAM (4 Pilar resmi — jelaskan PENERAPAN KONKRETNYA untuk materi ini, BUKAN sekadar menyebut nama pilarnya):\n`;
+    userPrompt += `## 5. Kerangka Pembelajaran Mendalam\n`;
+    userPrompt += `(4 Pilar resmi — jelaskan PENERAPAN KONKRETNYA untuk materi ini, BUKAN sekadar menyebut nama pilarnya):\n`;
     userPrompt += `(a) Praktik Pedagogis: ${pedagogisText}\n`;
     userPrompt += `(b) Lingkungan Pembelajaran: Ruang Fisik = ${ruangFisik === 'AI pilihkan' ? 'AI BEBAS memilih yang paling sesuai' : ruangFisik}; Ruang Virtual = ${ruangVirtual === 'AI pilihkan' ? 'AI BEBAS memilih yang paling sesuai' : ruangVirtual}${budayaBelajar ? '; Budaya Belajar yang dibangun = ' + budayaBelajar : '; Budaya Belajar = AI BEBAS tentukan suasana kelas yang sesuai (misal kolaboratif/reflektif)'}\n`;
     userPrompt += `(c) Kemitraan Pembelajaran: ${kemitraan === '' ? 'Tidak relevan untuk materi ini, boleh dilewati atau disebutkan singkat saja' : (kemitraan === 'AI pilihkan' ? 'AI BEBAS memilih pihak yang relevan jika ada' : kemitraan)}\n`;
@@ -928,33 +930,35 @@ function buildPrompt(){
     }
     userPrompt += `\n\n`;
 
-    userPrompt += `6. LANGKAH-LANGKAH PEMBELAJARAN (SINTAK)\n`;
+    userPrompt += `## 6. Langkah-langkah Pembelajaran (Sintak)\n`;
     userPrompt += `Ikuti alur Pengalaman Belajar 3 tahap: Memahami → Mengaplikasi → Merefleksi, dengan estimasi alokasi waktu proporsional terhadap total ${menit} menit${jumlahPertemuan>1 ? ` dibagi ke ${pertemuan} pertemuan` : ''}.\n`;
     userPrompt += `WAJIB rancang aktivitas KONKRET (bukan cuma menyebut label level kognitifnya) yang menunjukkan progresi tangga kognitif menuju TP:\n`;
     userPrompt += `- Tahap Memahami: aktivitas nyata yang melatih C1 (mengingat fakta/konsep dasar) DAN C2 (menjelaskan/memahami dengan kata sendiri)\n`;
     userPrompt += `- Tahap Mengaplikasi: aktivitas nyata C3 (menerapkan konsep pada soal/kasus nyata)\n`;
     userPrompt += `- Tahap Merefleksi: aktivitas nyata yang mengarah ke pencapaian level TP yang dituliskan (C4/C5/C6)\n\n`;
 
-    userPrompt += `7. INSTRUMEN ASESMEN PEMBELAJARAN\n`;
+    userPrompt += `## 7. Instrumen Asesmen Pembelajaran\n`;
     userPrompt += `Tentukan bentuk Asesmen Formatif (selama proses) dan Asesmen Sumatif (akhir pembelajaran) yang BENAR-BENAR SELARAS dengan model pembelajaran (Praktik Pedagogis) di poin 5(a) — prinsip asesmen autentik/constructive alignment. Contoh: kalau model PjBL/PBL gunakan portofolio/produk/presentasi (BUKAN tes pilihan ganda); kalau model inkuiri/eksperimen gunakan jurnal investigasi/laporan proses. Hindari tes tertulis konvensional kecuali memang paling sesuai dengan konteks materi. Sertakan rubrik penilaian sederhana.\n\n`;
 
-    userPrompt += `8. PROGRAM REMEDIAL DAN PENGAYAAN\n\n`;
+    userPrompt += `## 8. Program Remedial dan Pengayaan\n\n`;
 
-    userPrompt += `9. LAMPIRAN\n`;
+    userPrompt += `## 9. Lampiran\n`;
     userPrompt += `Cukup tulis referensi singkat, CONTOH: "LKPD untuk materi ini dapat digenerate terpisah menggunakan fitur LKPD pada aplikasi ini, dengan TP yang sama." JANGAN menulis LKPD lengkap di bagian ini.\n`;
   } else if(selectedOutput === 'rangkuman'){
     userPrompt += `JENIS DOKUMEN: Rangkuman / Materi Ajar untuk dibagikan ke peserta didik dan dijadikan pegangan guru.\n`;
+    userPrompt += `ATURAN FORMAT WAJIB: Kelima judul bagian di bawah ini HARUS ditulis PERSIS sebagai heading Markdown level 2 (diawali "## "), CONTOH: "## 1. Judul Materi & Pengantar". JANGAN tulis judul-judul ini sebagai teks bernomor biasa tanpa tanda "##".\n`;
     userPrompt += `Susun dengan struktur:\n`;
-    userPrompt += `1. Judul Materi & Pengantar singkat\n`;
-    userPrompt += `2. Penjelasan konsep utama secara bertahap, dengan bahasa yang sesuai usia anak kelas ${kelas} SD\n`;
-    userPrompt += `3. Contoh konkret / ilustrasi dari kehidupan sehari-hari\n`;
-    userPrompt += `4. Poin-poin penting (rangkuman akhir dalam bentuk bullet list)\n`;
-    userPrompt += `5. Beberapa pertanyaan refleksi singkat di akhir\n`;
+    userPrompt += `## 1. Judul Materi & Pengantar\n`;
+    userPrompt += `## 2. Penjelasan Konsep Utama\nJelaskan secara bertahap, dengan bahasa yang sesuai usia anak kelas ${kelas} SD\n`;
+    userPrompt += `## 3. Contoh Konkret\nIlustrasi dari kehidupan sehari-hari\n`;
+    userPrompt += `## 4. Poin-Poin Penting\nRangkuman akhir dalam bentuk bullet list\n`;
+    userPrompt += `## 5. Refleksi\nBeberapa pertanyaan refleksi singkat\n`;
   } else if(selectedOutput === 'lkpd'){
     const kesulitan = [...document.querySelectorAll('#kesulitanGroup input:checked')].map(i=>i.value);
     const sertakanKunci = document.getElementById('kunciToggle').classList.contains('on');
 
     userPrompt += `JENIS DOKUMEN: LKPD (Lembar Kerja Peserta Didik).\n`;
+    userPrompt += `ATURAN PENOMORAN & HEADING (WAJIB DIPATUHI): nomor soal (1, 2, 3, dst.) harus BERLANJUT/BERURUTAN dari awal sampai akhir DALAM SATU JENIS SOAL YANG SAMA, TIDAK BOLEH mulai dari 1 lagi di tengah jalan. Kalau Anda ingin mengelompokkan soal berdasarkan TINGKAT KESULITAN (Mudah/Sedang/Sulit/HOTS) di dalam satu jenis soal yang sama, JANGAN gunakan format heading Markdown (jangan pakai #, ##, ###, ####) untuk label kategori kesulitan tersebut — cukup tulis sebagai teks tebal biasa, contoh: **Kategori: Tingkat Mudah (Nomor 1-6)**. Heading Markdown (##/###/####) HANYA boleh dipakai untuk membedakan JENIS SOAL yang berbeda (misal "## Pilihan Ganda", "## Isian Singkat"), bukan untuk sub-kategori kesulitan di dalamnya.\n`;
     userPrompt += `Ketentuan LKPD:\n`;
 
     if(jumlahSoalMode === 'perjenis'){
@@ -1080,8 +1084,8 @@ function markdownToHtml(md){
 
     // Heading = section baru -> nomor soal reset ke 1 lagi (ini yang memang diinginkan,
     // misal pindah dari "Isian Singkat" ke "Uraian")
-    if(/^####\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h4>${inlineFmt(trimmed.replace(/^####\s+/,''))}</h4>`; continue; }
-    if(/^###\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h3>${inlineFmt(trimmed.replace(/^###\s+/,''))}</h3>`; continue; }
+    if(/^####\s+/.test(trimmed)){ closeList(); html += `<h4>${inlineFmt(trimmed.replace(/^####\s+/,''))}</h4>`; continue; }
+    if(/^###\s+/.test(trimmed)){ closeList(); html += `<h3>${inlineFmt(trimmed.replace(/^###\s+/,''))}</h3>`; continue; }
     if(/^##\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h2>${inlineFmt(trimmed.replace(/^##\s+/,''))}</h2>`; continue; }
     if(/^#\s+/.test(trimmed)){ closeList(); questionCounter=0; html += `<h1>${inlineFmt(trimmed.replace(/^#\s+/,''))}</h1>`; continue; }
     if(/^---+$/.test(trimmed)){ closeList(); html += '<hr>'; continue; }
@@ -1350,8 +1354,8 @@ async function downloadWord(){
       } else if(inTable){ flushTable(); }
 
       // Heading = section baru -> nomor soal reset ke 1 lagi (memang diinginkan)
-      if(/^####\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^####\s+/,''), heading: HeadingLevel.HEADING_4, spacing:{before:140} })); continue; }
-      if(/^###\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^###\s+/,''), heading: HeadingLevel.HEADING_3, spacing:{before:160} })); continue; }
+      if(/^####\s+/.test(trimmed)){ children.push(new Paragraph({ text: trimmed.replace(/^####\s+/,''), heading: HeadingLevel.HEADING_4, spacing:{before:140} })); continue; }
+      if(/^###\s+/.test(trimmed)){ children.push(new Paragraph({ text: trimmed.replace(/^###\s+/,''), heading: HeadingLevel.HEADING_3, spacing:{before:160} })); continue; }
       if(/^##\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^##\s+/,''), heading: HeadingLevel.HEADING_2, spacing:{before:200} })); continue; }
       if(/^#\s+/.test(trimmed)){ questionCounter=0; children.push(new Paragraph({ text: trimmed.replace(/^#\s+/,''), heading: HeadingLevel.HEADING_1, spacing:{before:200} })); continue; }
       if(/^---+$/.test(trimmed)){
