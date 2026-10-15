@@ -97,7 +97,8 @@
   .prose-doc strong{font-weight:700;color:var(--ink);}
   .prose-doc table{border-collapse:collapse;width:100%;margin:.8rem 0;font-size:.92rem;}
   .prose-doc th,.prose-doc td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top;}
-  .prose-doc th{background:#EFE9D8;font-weight:700;font-family:'Lexend',sans-serif;}
+  .prose-doc th{background:var(--chalk-blue-dark);color:#fff;font-weight:700;font-family:'Lexend',sans-serif;}
+  .prose-doc tbody tr:nth-child(even){background:#F3EFE4;}
   .prose-doc hr{border-color:var(--line);margin:1.2rem 0;}
   .scale-anim{animation: pop .18s ease-out;}
   @keyframes pop{from{transform:scale(.97);opacity:.6}to{transform:scale(1);opacity:1}}
@@ -235,6 +236,12 @@
       <p class="font-display font-semibold text-sm text-[color:var(--ink)] flex items-center gap-2">
         <i class="fa-solid fa-sliders text-[color:var(--chalk-blue)]"></i> Pengaturan Rencana Pembelajaran Mendalam (RPM)
       </p>
+
+      <!-- Capaian Pembelajaran -->
+      <div>
+        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Capaian Pembelajaran (CP) <span class="text-slate-400 font-normal normal-case">(Opsional)</span></label>
+        <textarea id="cp" rows="2" placeholder="Tempel bunyi CP resmi dari dokumen Kemendikdasmen di sini (opsional). Kalau dikosongkan, RPP akan menampilkan titik-titik supaya Anda isi sendiri — supaya tidak salah kutip." class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white resize-none"></textarea>
+      </div>
 
       <!-- Profil Lulusan -->
       <div>
@@ -538,6 +545,15 @@
     <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-xs text-[color:var(--chalk-blue)] hover:underline flex items-center gap-1 mt-2">
       <i class="fa-solid fa-arrow-up-right-from-square"></i> Dapatkan API Key gratis di Google AI Studio
     </a>
+    <div class="mt-4">
+      <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Model AI</label>
+      <select id="modelSelect" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm bg-white">
+        <option value="gemini-3.6-flash">Gemini 3.6 Flash (disarankan)</option>
+        <option value="gemini-3.8-flash">Gemini 3.8 Flash (terbaru)</option>
+        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (ringan, hasil kurang teliti)</option>
+      </select>
+      <p class="text-[11px] text-slate-400 mt-1">Kalau satu model sedang penuh atau kuotanya habis, coba pindah ke model lain.</p>
+    </div>
     <button onclick="saveApiKey()" class="btn-primary w-full rounded-lg py-2.5 font-semibold text-sm mt-5">Simpan API Key</button>
   </div>
 </div>
@@ -829,8 +845,15 @@ function refreshApiStatus(){
   dot.classList.toggle('bg-red-400', !key);
   dot.classList.toggle('bg-green-400', !!key);
 }
+const MODEL_DEFAULT = 'gemini-3.6-flash';
+const MODEL_VALID = ['gemini-3.6-flash','gemini-3.8-flash','gemini-3.5-flash-lite'];
+function getSelectedModel(){
+  const m = localStorage.getItem('gemini_model');
+  return MODEL_VALID.includes(m) ? m : MODEL_DEFAULT;
+}
 function openApiModal(){
   document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
+  document.getElementById('modelSelect').value = getSelectedModel();
   document.getElementById('apiModal').classList.remove('hidden');
 }
 function closeApiModal(){ document.getElementById('apiModal').classList.add('hidden'); }
@@ -842,13 +865,70 @@ function saveApiKey(){
   const val = document.getElementById('apiKeyInput').value.trim();
   if(!val){ alert('Mohon masukkan API Key yang valid.'); return; }
   localStorage.setItem('gemini_api_key', val);
+  localStorage.setItem('gemini_model', document.getElementById('modelSelect').value);
   refreshApiStatus();
   closeApiModal();
 }
 refreshApiStatus();
 
 // ---------- PROMPT BUILDER ----------
+// ---------- SEBARAN KUNCI JAWABAN PG (merata & acak, dihitung kode bukan AI) ----------
+function acakArray(arr){
+  const a = [...arr];
+  for(let i = a.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function buatJadwalKunciPG(jumlahSoal, jumlahOpsi){
+  const semuaOpsi = jumlahOpsi === 3 ? ['A','B','C'] : ['A','B','C','D'];
+  const opsiAcak = acakArray(semuaOpsi); // acak huruf mana yang kebagian sisa +1
+  const base = Math.floor(jumlahSoal / opsiAcak.length);
+  let sisa = jumlahSoal - base*opsiAcak.length;
+  let pool = [];
+  opsiAcak.forEach((huruf, idx)=>{
+    const jumlah = base + (idx < sisa ? 1 : 0);
+    for(let i=0;i<jumlah;i++) pool.push(huruf);
+  });
+  pool = acakArray(pool);
+  // hindari kunci sama persis 2x berturut-turut kalau memungkinkan
+  for(let i=1;i<pool.length;i++){
+    if(pool[i] === pool[i-1]){
+      for(let j=i+1;j<pool.length;j++){
+        if(pool[j] !== pool[i-1]){ [pool[i], pool[j]] = [pool[j], pool[i]]; break; }
+      }
+    }
+  }
+  return pool;
+}
+
 function buildPrompt(){
+
+// ---------- FUNGSI BANTU RPP (dihitung kode, bukan AI) ----------
+function hitungFase(kelasNum){
+  if(kelasNum <= 2) return 'A';
+  if(kelasNum <= 4) return 'B';
+  return 'C';
+}
+function hitungJpPerPertemuan(totalJp, jumlahPertemuan){
+  const base = Math.floor(totalJp / jumlahPertemuan);
+  let sisa = totalJp - (base * jumlahPertemuan);
+  const hasil = [];
+  for(let i=0;i<jumlahPertemuan;i++){
+    let jpIni = base;
+    if(sisa > 0){ jpIni += 1; sisa--; }
+    hasil.push(jpIni);
+  }
+  return hasil; // array JP per pertemuan, totalnya pasti = totalJp
+}
+function petaTahapPerPertemuan(n){
+  if(n <= 1) return 'Karena hanya 1 pertemuan, gabungkan ketiga tahap (Memahami, Mengaplikasi, Merefleksi) secara ringkas dalam SATU tabel pertemuan saja.';
+  if(n === 2) return 'Pertemuan 1 = Tahap Memahami dan awal Mengaplikasi. Pertemuan 2 = lanjutan Mengaplikasi dan Merefleksi.';
+  if(n === 3) return 'Pertemuan 1 = Tahap Memahami. Pertemuan 2 = Tahap Mengaplikasi. Pertemuan 3 = Tahap Merefleksi.';
+  return `Pertemuan 1 = Tahap Memahami. Pertemuan 2 sampai ${n-1} = Tahap Mengaplikasi (boleh dipecah beberapa sesi/sub-topik sesuai kompleksitas materi). Pertemuan ${n} (terakhir) = Tahap Merefleksi.`;
+}
+
   const mapel = document.getElementById('mapel').value.trim() || '(belum diisi)';
   const kelas = document.getElementById('kelas').value;
   const materi = document.getElementById('materi').value.trim() || '(belum diisi)';
@@ -868,25 +948,29 @@ function buildPrompt(){
 
   if(selectedOutput === 'modul'){
     // Ambil semua nilai form RPM
+    const cp = document.getElementById('cp').value.trim();
     const profilAiPilih = document.getElementById('profilAiPilih').checked;
     let profilLulusanText;
     if(profilAiPilih){
-      profilLulusanText = 'AI BEBAS memilih 1-3 dimensi yang PALING relevan dengan materi ini dari 8 dimensi resmi berikut: Keimanan dan Ketakwaan terhadap Tuhan YME, Kewargaan, Penalaran Kritis, Kreativitas, Kolaborasi, Kemandirian, Kesehatan, Komunikasi. Sertakan alasan singkat pemilihannya.';
+      profilLulusanText = 'AI BEBAS memilih 1-3 dimensi yang PALING relevan dengan materi ini dari 8 dimensi resmi berikut: Keimanan dan Ketakwaan terhadap Tuhan YME, Kewargaan, Penalaran Kritis, Kreativitas, Kolaborasi, Kemandirian, Kesehatan, Komunikasi.';
     } else {
       const dipilihProfil = [...document.querySelectorAll('#profilLulusanGroup input:checked')].map(i=>i.value);
       profilLulusanText = dipilihProfil.length
-        ? `Guru SUDAH MEMILIH dimensi berikut, WAJIB dipakai persis (jangan diganti/ditambah dimensi lain): ${dipilihProfil.join(', ')}. Jelaskan penerapannya untuk materi ini.`
+        ? `Guru SUDAH MEMILIH dimensi berikut, WAJIB dipakai persis (jangan diganti/ditambah dimensi lain): ${dipilihProfil.join(', ')}.`
         : 'Guru belum memilih dimensi spesifik, AI BEBAS memilih 1-3 dimensi paling relevan dari 8 dimensi resmi.';
     }
 
     const pedagogisAiPilih = document.getElementById('pedagogisAiPilih').checked;
+    let pedagogisNama;
     let pedagogisText;
     if(pedagogisAiPilih){
+      pedagogisNama = 'model pembelajaran yang paling sesuai (ditentukan AI)';
       pedagogisText = 'AI BEBAS memilih model pembelajaran (Praktik Pedagogis) yang PALING sesuai dengan materi, kesiapan siswa, dan alokasi waktu.';
     } else {
       const dipilihModel = [...document.querySelectorAll('#pedagogisChipGroup input:checked')].map(i=>i.value);
       const modelLainnya = document.getElementById('pedagogisLainnya').value.trim();
       if(modelLainnya) dipilihModel.push(modelLainnya);
+      pedagogisNama = dipilihModel.length ? dipilihModel.join(' dan ') : 'model pembelajaran yang paling sesuai (ditentukan AI)';
       pedagogisText = dipilihModel.length
         ? `Guru SUDAH MEMILIH model pembelajaran berikut, WAJIB dipakai: ${dipilihModel.join(', ')}.`
         : 'Guru belum memilih model spesifik, AI BEBAS memilih yang paling sesuai.';
@@ -900,50 +984,78 @@ function buildPrompt(){
     const digitalLink = document.getElementById('digitalLink').value.trim();
     const karakterMurid = document.getElementById('karakterMurid').value.trim();
     const jumlahPertemuan = parseInt(pertemuan) || 1;
+    const kelasNumRPP = parseInt(kelas) || 4;
+    const fase = hitungFase(kelasNumRPP);
+    const jpArray = hitungJpPerPertemuan(parseInt(jp)||1, jumlahPertemuan);
+    const petaTahap = petaTahapPerPertemuan(jumlahPertemuan);
 
-    userPrompt += `JENIS DOKUMEN: RPP (Rencana Pelaksanaan Pembelajaran) dengan pendekatan Pembelajaran Mendalam / Deep Learning (RPM), sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses.\n`;
-    userPrompt += `Jumlah Pertemuan: ${pertemuan}${jumlahPertemuan>1 ? ' (WAJIB pecah bagian Langkah-langkah Pembelajaran secara EKSPLISIT per pertemuan, misal "Pertemuan 1: ...", "Pertemuan 2: ...", JANGAN ditulis sebagai satu sesi panjang tanpa jeda)' : ''}\n\n`;
-    userPrompt += `ATURAN FORMAT WAJIB: Kesembilan judul komponen RPP di bawah ini (Identitas, Penguatan Dimensi Profil Lulusan, dst.) HARUS ditulis PERSIS sebagai heading Markdown level 2 (diawali "## "), CONTOH: "## 1. Identitas". JANGAN tulis judul-judul ini sebagai teks bernomor biasa tanpa tanda "##", karena akan tertukar secara visual dengan penomoran soal/indikator di dalam dokumen. Salin persis tanda "##" pada setiap judul poin 1 sampai 9 di bawah ini.\n\n`;
-    userPrompt += `Susun dengan struktur berikut secara lengkap dan siap pakai:\n\n`;
+    userPrompt += `JENIS DOKUMEN: RPM (Rencana Pembelajaran Mendalam), format resmi sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses.\n`;
+    userPrompt += `Jumlah Pertemuan: ${jumlahPertemuan}.\n`;
+    userPrompt += `ALOKASI MENIT PER PERTEMUAN (SUDAH DIHITUNG SISTEM, WAJIB diikuti persis — total baris "Waktu" pada tabel tiap pertemuan HARUS PAS dengan angka ini, JANGAN dihitung ulang sendiri): ${jpArray.map((j,i)=>`Pertemuan ${i+1} = ${j} JP (${j*35} menit)`).join(', ')}.\n`;
+    userPrompt += `PEMBAGIAN TAHAP PER PERTEMUAN (WAJIB diikuti): ${petaTahap}\n\n`;
 
-    userPrompt += `## 1. Identitas\nNama Sekolah, Mata Pelajaran, Kelas/Fase, Materi, Alokasi Waktu, Sarana & Prasarana singkat\n\n`;
+    userPrompt += `ATURAN FORMAT WAJIB: judul bagian utama A sampai F ditulis sebagai heading Markdown level 2 ("## A. Identifikasi", dst.), dan sub-bagian di dalamnya sebagai heading level 3 ("### 1. Identitas", dst.). JANGAN tulis judul-judul ini sebagai teks bernomor biasa tanpa tanda pagar.\n\n`;
+    userPrompt += `Judul dokumen: tulis sebagai heading level 1 ("# RENCANA PEMBELAJARAN MENDALAM (RPM)"), diikuti baris italic berisi "*${materi} — ${mapel} Kelas ${kelas}*".\n\n`;
 
-    userPrompt += `## 2. Penguatan Dimensi Profil Lulusan\n${profilLulusanText}\n\n`;
-
-    userPrompt += `## 3. Tujuan Pembelajaran (TP) dan Kriteria Ketercapaian Tujuan Pembelajaran (KKTP)\n`;
-    userPrompt += `TP: Tulis HANYA 1 kalimat TP per tujuan, di level kognitif TERTINGGI yang relevan (Taksonomi Bloom, MINIMAL C3-Menerapkan, IDEALNYA C4-C6 yaitu Menganalisis/Mengevaluasi/Mencipta agar benar-benar HOTS/pembelajaran mendalam). JANGAN tulis TP terpisah untuk tiap level kognitif (C1/C2/C3) karena level tertinggi yang dipilih sudah otomatis mencakup/mempersyaratkan level di bawahnya.\n`;
-    userPrompt += `KKTP: Susun sebagai BEBERAPA indikator/kriteria konkret (bukan 1 kalimat seperti TP) yang membuktikan TP tercapai. Indikator ini BOLEH mencakup kemampuan pendukung di level kognitif lebih rendah dari TP (karena fungsinya sebagai tangga bukti menuju TP, bukan pengulangan TP). Gunakan format Rubrik Penilaian (4-5 kriteria) atau Indikator Asesmen (boleh gabungan keduanya). JANGAN gunakan angka mutlak (misal "75", "80") sebagai kriteria kelulusan — gunakan deskripsi kemampuan, atau interval nilai jika memang perlu angka.\n\n`;
-
-    userPrompt += `## 4. Karakter Murid (Kesiapan Belajar)\n`;
+    userPrompt += `## A. Identifikasi\n\n`;
+    userPrompt += `### 1. Identitas\n`;
+    userPrompt += `Sajikan sebagai TABEL MARKDOWN 2 kolom PERSIS format ini, TERMASUK baris header dan baris pemisah "---" di awal (JANGAN dihilangkan, ganti bagian [ ] saja, baris lain disalin apa adanya):\n`;
+    userPrompt += `| Komponen | Keterangan |\n| --- | --- |\n| Satuan Pendidikan | ....... |\n| Mata Pelajaran | ${mapel} |\n| Kelas / Fase | ${kelas} (Fase ${fase}) |\n| Materi | ${materi} |\n| Alokasi Waktu | ${jp} JP x 35 menit (${jumlahPertemuan} kali pertemuan) |\n| Media/Sumber Belajar | [tentukan berdasarkan Kerangka Pembelajaran Mendalam di bagian B.5] |\n`;
+    userPrompt += `JANGAN mengarang nama sekolah — baris "Satuan Pendidikan" WAJIB tetap berisi titik-titik "......." persis seperti contoh.\n\n`;
+    userPrompt += `### 2. Kesiapan dan Karakteristik Peserta Didik\n`;
     userPrompt += karakterMurid
       ? `${karakterMurid}\n\n`
       : `Guru belum mengisi data spesifik. Buatkan ASUMSI karakteristik yang umum dan wajar untuk siswa kelas ${kelas} SD pada materi "${materi}" ini (mencakup kesiapan belajar/pengetahuan prasyarat, minat & motivasi, dan profil/gaya belajar).\n\n`;
+    userPrompt += `### 3. Karakteristik Materi\n`;
+    userPrompt += `Jelaskan singkat (2-3 kalimat) sifat materi "${materi}" ini (konkret/abstrak, perlu visualisasi/praktik langsung, dsb.) dan implikasinya terhadap kebutuhan media/metode pembelajaran.\n\n`;
+    userPrompt += `### 4. Dimensi Profil Lulusan yang Disasar\n${profilLulusanText}\n\n`;
 
-    userPrompt += `## 5. Kerangka Pembelajaran Mendalam\n`;
+    userPrompt += `## B. Desain Pembelajaran\n\n`;
+    userPrompt += `### 1. Capaian Pembelajaran\n`;
+    userPrompt += cp
+      ? `${cp}\n\n`
+      : `Tulis PERSIS sebagai: "........ (salin dari Capaian Pembelajaran resmi Fase ${fase} mata pelajaran ${mapel})" — JANGAN mengarang bunyi CP sendiri.\n\n`;
+    userPrompt += `### 2. Tujuan Pembelajaran\n`;
+    userPrompt += `Guru menulis TP berikut (boleh informal/singkat): "${tp}"\n`;
+    userPrompt += `TUGAS ANDA: susun ulang TP di atas menjadi kalimat UTUH dengan rumus: "Melalui [model/aktivitas pembelajaran], peserta didik mampu [kata kerja operasional level TINGGI + konten materi] dengan [kriteria/kualitas keberhasilan] melalui [bukti/produk nyata]." Gunakan model pembelajaran: ${pedagogisNama}. WAJIB pertahankan makna/maksud asli dari TP yang ditulis guru — JANGAN mengganti topik atau maksudnya. Kalau guru menulis lebih dari satu TP, buat SATU kalimat utuh terpisah untuk MASING-MASING TP tersebut (jangan digabung jadi satu, jangan juga dipecah per level kognitif C1/C2/C3). Kata kerja operasional WAJIB minimal level C3 (Menerapkan), idealnya C4-C6 (Menganalisis/Mengevaluasi/Mencipta) — kalau kata kerja yang ditulis guru masih level C1/C2, naikkan levelnya sambil tetap mempertahankan topik/maksud aslinya.\n\n`;
+    userPrompt += `### 3. Pemahaman Bermakna\n`;
+    userPrompt += `Satu kalimat "big idea" dari materi ini yang menghubungkan konsep dengan kehidupan nyata peserta didik.\n\n`;
+    userPrompt += `### 4. Pertanyaan Pemantik\n`;
+    userPrompt += `1-2 pertanyaan pembuka yang memancing rasa ingin tahu, DAN sekaligus bisa dipakai sebagai instrumen Asesmen Formatif Awal di bagian C.\n\n`;
+    userPrompt += `### 5. Kerangka Pembelajaran Mendalam\n`;
     userPrompt += `(4 Pilar resmi — jelaskan PENERAPAN KONKRETNYA untuk materi ini, BUKAN sekadar menyebut nama pilarnya):\n`;
     userPrompt += `(a) Praktik Pedagogis: ${pedagogisText}\n`;
     userPrompt += `(b) Lingkungan Pembelajaran: Ruang Fisik = ${ruangFisik === 'AI pilihkan' ? 'AI BEBAS memilih yang paling sesuai' : ruangFisik}; Ruang Virtual = ${ruangVirtual === 'AI pilihkan' ? 'AI BEBAS memilih yang paling sesuai' : ruangVirtual}${budayaBelajar ? '; Budaya Belajar yang dibangun = ' + budayaBelajar : '; Budaya Belajar = AI BEBAS tentukan suasana kelas yang sesuai (misal kolaboratif/reflektif)'}\n`;
     userPrompt += `(c) Kemitraan Pembelajaran: ${kemitraan === '' ? 'Tidak relevan untuk materi ini, boleh dilewati atau disebutkan singkat saja' : (kemitraan === 'AI pilihkan' ? 'AI BEBAS memilih pihak yang relevan jika ada' : kemitraan)}\n`;
     userPrompt += `(d) Pemanfaatan Digital: ${digitalTersedia ? 'Sekolah punya akses internet/proyektor/IFP, WAJIB manfaatkan teknologi digital yang relevan untuk materi ini' : 'Sekolah TIDAK punya akses internet/proyektor/IFP, JANGAN sarankan alat digital apa pun, fokus pada metode manual/non-digital'}`;
     if(digitalTersedia && digitalLink){
-      userPrompt += `. Guru sudah menyiapkan media digital berikut, WAJIB disisipkan di bagian yang relevan (baik di poin ini maupun di Langkah-langkah Pembelajaran saat dipakai), tuliskan link-nya dalam format markdown [nama media](link) supaya bisa diklik:\n${digitalLink}`;
+      userPrompt += `. Guru sudah menyiapkan media digital berikut, WAJIB disisipkan di bagian yang relevan (baik di poin ini maupun di Pengalaman Belajar saat dipakai), tuliskan link-nya dalam format markdown [nama media](link) supaya bisa diklik:\n${digitalLink}`;
     }
-    userPrompt += `\n\n`;
+    userPrompt += `\n`;
+    if(digitalTersedia){
+      userPrompt += `### 6. Rasional Penggunaan Media\nJelaskan singkat (1-2 kalimat) alasan pedagogis pemilihan media/teknologi digital di atas untuk materi ini.\n\n`;
+    } else {
+      userPrompt += `\n`;
+    }
 
-    userPrompt += `## 6. Langkah-langkah Pembelajaran (Sintak)\n`;
-    userPrompt += `Ikuti alur Pengalaman Belajar 3 tahap: Memahami → Mengaplikasi → Merefleksi, dengan estimasi alokasi waktu proporsional terhadap total ${menit} menit${jumlahPertemuan>1 ? ` dibagi ke ${pertemuan} pertemuan` : ''}.\n`;
-    userPrompt += `WAJIB rancang aktivitas KONKRET (bukan cuma menyebut label level kognitifnya) yang menunjukkan progresi tangga kognitif menuju TP:\n`;
-    userPrompt += `- Tahap Memahami: aktivitas nyata yang melatih C1 (mengingat fakta/konsep dasar) DAN C2 (menjelaskan/memahami dengan kata sendiri)\n`;
-    userPrompt += `- Tahap Mengaplikasi: aktivitas nyata C3 (menerapkan konsep pada soal/kasus nyata)\n`;
-    userPrompt += `- Tahap Merefleksi: aktivitas nyata yang mengarah ke pencapaian level TP yang dituliskan (C4/C5/C6)\n\n`;
+    userPrompt += `## C. Asesmen Formatif Awal dan KKTP\n`;
+    userPrompt += `Instrumen: gunakan Pertanyaan Pemantik di atas (bagian B.4) sebagai instrumen Asesmen Formatif Awal untuk mengecek kesiapan/pengalaman awal peserta didik SEBELUM masuk ke kegiatan inti pada Pertemuan 1.\n`;
+    userPrompt += `Kriteria Ketercapaian Tujuan Pembelajaran (KKTP): Susun sebagai BEBERAPA indikator/kriteria konkret (bukan 1 kalimat seperti TP) yang membuktikan TP tercapai — level indikatornya harus mengarah/setara level TP (bukan cuma level kesiapan dasar). Indikator BOLEH mencakup kemampuan pendukung di level kognitif lebih rendah dari TP sebagai tangga bukti. Gunakan format Rubrik Penilaian (4-5 kriteria) atau Indikator Asesmen (boleh gabungan). JANGAN gunakan angka mutlak (misal "75", "80") — gunakan deskripsi kemampuan atau interval nilai.\n`;
+    userPrompt += `Tambahkan 1 kalimat italic di akhir bagian ini yang menjelaskan bagaimana guru MEMANFAATKAN hasil Asesmen Formatif Awal untuk menyesuaikan intensitas penjelasan di tahap Memahami.\n\n`;
 
-    userPrompt += `## 7. Instrumen Asesmen Pembelajaran\n`;
-    userPrompt += `Tentukan bentuk Asesmen Formatif (selama proses) dan Asesmen Sumatif (akhir pembelajaran) yang BENAR-BENAR SELARAS dengan model pembelajaran (Praktik Pedagogis) di poin 5(a) — prinsip asesmen autentik/constructive alignment. Contoh: kalau model PjBL/PBL gunakan portofolio/produk/presentasi (BUKAN tes pilihan ganda); kalau model inkuiri/eksperimen gunakan jurnal investigasi/laporan proses. Hindari tes tertulis konvensional kecuali memang paling sesuai dengan konteks materi. Sertakan rubrik penilaian sederhana.\n\n`;
+    userPrompt += `## D. Pengalaman Belajar (Kegiatan Pembelajaran)\n`;
+    userPrompt += `Untuk SETIAP pertemuan, buat sub-heading "### Pertemuan N (X JP) — Tahap [nama tahap]" diikuti TABEL MARKDOWN 4 kolom dengan baris header dan pemisah "---" di awal, format PERSIS seperti ini: "| Tahap | Waktu | Kegiatan Guru dan Siswa | Media/Sumber |" lalu baris "| --- | --- | --- | --- |", baru diikuti baris-baris data.\n`;
+    userPrompt += `Baris tabel WAJIB memuat minimal: Pembuka, 1-2 baris kegiatan Inti (boleh diberi label sesuai tahap, misal "Memahami (Inti 1)"), dan Penutup. Kolom Waktu dalam satuan menit, dan JUMLAH seluruh baris Waktu dalam satu tabel pertemuan HARUS PAS SAMA dengan total menit pertemuan itu (lihat alokasi menit per pertemuan yang sudah dihitung di atas) — JANGAN sampai lebih atau kurang.\n`;
+    userPrompt += `Isi kolom "Kegiatan Guru dan Siswa" harus KONKRET dan REALISTIS untuk durasi yang dialokasikan (jangan menumpuk banyak aktivitas berbeda dalam waktu singkat). Kolom "Media/Sumber" isi sesuai Kerangka Pembelajaran Mendalam di atas.\n\n`;
 
-    userPrompt += `## 8. Program Remedial dan Pengayaan\n\n`;
+    userPrompt += `## E. Asesmen Formatif Proses dan Sumatif\n`;
+    userPrompt += `Tentukan bentuk Asesmen Formatif Proses (selama kegiatan, berbasis observasi/pemantauan) dan Asesmen Sumatif (penilaian akhir unit) yang BENAR-BENAR SELARAS dengan model pembelajaran (Praktik Pedagogis) dan level TP di atas — prinsip asesmen autentik/constructive alignment. Contoh: kalau model PjBL/PBL dan TP level Menganalisis/Mengevaluasi, gunakan portofolio/produk/presentasi/laporan analisis (BUKAN tes pilihan ganda sederhana). Sertakan rubrik penilaian sederhana untuk Asesmen Sumatif.\n\n`;
 
-    userPrompt += `## 9. Lampiran\n`;
-    userPrompt += `Cukup tulis referensi singkat, CONTOH: "LKPD untuk materi ini dapat digenerate terpisah menggunakan fitur LKPD pada aplikasi ini, dengan TP yang sama." JANGAN menulis LKPD lengkap di bagian ini.\n`;
+    userPrompt += `## F. Refleksi\n`;
+    userPrompt += `Refleksi Peserta Didik: 1 kalimat arahan refleksi yang mengaitkan materi dengan pengalaman/lingkungan nyata peserta didik.\n`;
+    userPrompt += `Refleksi Guru: 1 kalimat arahan evaluasi diri guru terhadap efektivitas pembelajaran ini.\n`;
+    userPrompt += `Program Remedial dan Pengayaan: 2-3 kalimat singkat — remedial untuk yang belum mencapai KKTP, pengayaan untuk yang sudah mencapai.\n`;
+    userPrompt += `Lampiran: 1 kalimat referensi singkat, CONTOH: "LKPD untuk materi ini dapat digenerate terpisah menggunakan fitur LKPD pada aplikasi ini, dengan TP yang sama." JANGAN menulis LKPD lengkap.\n`;
   } else if(selectedOutput === 'rangkuman'){
     userPrompt += `JENIS DOKUMEN: Rangkuman / Materi Ajar untuk dibagikan ke peserta didik dan dijadikan pegangan guru.\n`;
     userPrompt += `ATURAN FORMAT WAJIB: Kelima judul bagian di bawah ini HARUS ditulis PERSIS sebagai heading Markdown level 2 (diawali "## "), CONTOH: "## 1. Judul Materi & Pengantar". JANGAN tulis judul-judul ini sebagai teks bernomor biasa tanpa tanda "##".\n`;
@@ -956,10 +1068,16 @@ function buildPrompt(){
   } else if(selectedOutput === 'lkpd'){
     const kesulitan = [...document.querySelectorAll('#kesulitanGroup input:checked')].map(i=>i.value);
     const sertakanKunci = document.getElementById('kunciToggle').classList.contains('on');
+    const kelasNum = parseInt(kelas) || 4;
+    const jumlahOpsiPG = kelasNum <= 3 ? 3 : 4;
+    const labelOpsiPG = jumlahOpsiPG === 3 ? 'A, B, C' : 'A, B, C, D';
 
     userPrompt += `JENIS DOKUMEN: LKPD (Lembar Kerja Peserta Didik).\n`;
     userPrompt += `ATURAN PENOMORAN & HEADING (WAJIB DIPATUHI): nomor soal (1, 2, 3, dst.) harus BERLANJUT/BERURUTAN dari awal sampai akhir DALAM SATU JENIS SOAL YANG SAMA, TIDAK BOLEH mulai dari 1 lagi di tengah jalan. Kalau Anda ingin mengelompokkan soal berdasarkan TINGKAT KESULITAN (Mudah/Sedang/Sulit/HOTS) di dalam satu jenis soal yang sama, JANGAN gunakan format heading Markdown (jangan pakai #, ##, ###, ####) untuk label kategori kesulitan tersebut — cukup tulis sebagai teks tebal biasa, contoh: **Kategori: Tingkat Mudah (Nomor 1-6)**. Heading Markdown (##/###/####) HANYA boleh dipakai untuk membedakan JENIS SOAL yang berbeda (misal "## Pilihan Ganda", "## Isian Singkat"), bukan untuk sub-kategori kesulitan di dalamnya.\n`;
+    userPrompt += `ATURAN JUMLAH OPSI PILIHAN GANDA (WAJIB): karena target kelas ${kelasNum} SD, setiap soal Pilihan Ganda biasa HANYA boleh punya ${jumlahOpsiPG} opsi jawaban (${labelOpsiPG}) — JANGAN pakai opsi lebih dari itu.\n`;
     userPrompt += `Ketentuan LKPD:\n`;
+
+    let jumlahSoalPGPasti = 0; // dipakai untuk jadwal kunci jawaban pasti (mode per-jenis)
 
     if(jumlahSoalMode === 'perjenis'){
       const rincian = [...document.querySelectorAll('.perjenis-input')]
@@ -969,11 +1087,23 @@ function buildPrompt(){
       userPrompt += `- Jumlah soal ditentukan PERSIS per jenis soal (WAJIB diikuti tepat, jangan diubah proporsinya):\n`;
       rincian.forEach(r=> userPrompt += `  * ${r.jenis}: ${r.jumlah} soal\n`);
       userPrompt += `- Total keseluruhan: ${totalSoal} soal\n`;
+      const pgRincian = rincian.find(r=>r.jenis === 'Pilihan Ganda');
+      if(pgRincian) jumlahSoalPGPasti = pgRincian.jumlah;
     } else {
       const jenisSoal = [...document.querySelectorAll('#jenisSoalGroup input:checked')].map(i=>i.value);
       const jumlahSoal = document.getElementById('jumlahSoal').value || '10';
       userPrompt += `- Jenis soal yang digunakan: ${jenisSoal.length ? jenisSoal.join(', ') : 'Pilihan Ganda'}\n`;
       userPrompt += `- Jumlah soal total: ${jumlahSoal} soal (silakan dibagi proporsional ke jenis-jenis soal di atas)\n`;
+    }
+
+    // ATURAN SEBARAN KUNCI JAWABAN — dihitung oleh kode (bukan AI) supaya dijamin merata
+    if(jumlahSoalPGPasti > 0){
+      const jadwal = buatJadwalKunciPG(jumlahSoalPGPasti, jumlahOpsiPG);
+      userPrompt += `\nATURAN KUNCI JAWABAN PILIHAN GANDA (WAJIB DIIKUTI PERSIS, sudah dihitung sistem supaya merata): untuk ${jumlahSoalPGPasti} soal Pilihan Ganda, kunci jawaban tiap nomor SUDAH DITENTUKAN sebagai berikut secara berurutan — Soal PG ke-1 kunci ${jadwal[0]}, `;
+      userPrompt += jadwal.slice(1).map((k,i)=>`ke-${i+2} kunci ${k}`).join(', ');
+      userPrompt += `. Susun teks soal dan opsi jawabannya SEDEMIKIAN RUPA sehingga jawaban benar berada tepat di opsi yang ditentukan tersebut (opsi lain diisi pengecoh yang masuk akal). JANGAN mengubah urutan kunci ini. Pastikan kunci jawaban yang dituliskan di bagian akhir (jika diminta) SAMA PERSIS dengan urutan ini.\n`;
+    } else {
+      userPrompt += `\nATURAN KUNCI JAWABAN PILIHAN GANDA (WAJIB DIIKUTI): sebarkan posisi kunci jawaban benar SEMERATA MUNGKIN di antara opsi ${labelOpsiPG} — JANGAN mengelompok di satu huruf saja. Caranya: kelompokkan soal Pilihan Ganda berurutan menjadi "putaran" berisi ${jumlahOpsiPG} soal (soal ke-1 s.d. ${jumlahOpsiPG}, lalu ${jumlahOpsiPG+1} s.d. ${jumlahOpsiPG*2}, dst.). Dalam SETIAP putaran, pastikan setiap huruf opsi (${labelOpsiPG}) dipakai TEPAT SATU KALI sebagai kunci jawaban (urutan hurufnya boleh diacak bebas dan berbeda-beda tiap putaran, jangan memakai urutan yang sama persis berulang). Kalau soal terakhir tidak cukup untuk 1 putaran penuh, tetap usahakan huruf yang dipakai berbeda dari huruf yang baru saja dipakai di putaran sebelumnya.\n`;
     }
 
     userPrompt += `- Tingkat kesulitan yang harus tersebar proporsional: ${kesulitan.length ? kesulitan.join(', ') : 'Sedang'}\n`;
@@ -1152,7 +1282,7 @@ async function generateContent(){
   spinner.classList.remove('hidden');
 
   const { sistem, userPrompt } = buildPrompt();
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${getSelectedModel()}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
   const parts = [{ text: sistem + '\n\n' + userPrompt }];
   uploadedImages.forEach((img, i)=>{
@@ -1212,11 +1342,13 @@ async function generateContent(){
     if(/API key not valid|API_KEY_INVALID/i.test(friendly)){
       friendly = 'API Key tidak valid. Silakan periksa kembali di Pengaturan API Key.';
     } else if(/quota|RESOURCE_EXHAUSTED/i.test(friendly)){
-      friendly = 'Kuota API Key Anda telah habis. Silakan coba lagi nanti atau gunakan API Key lain.';
+      friendly = 'Kuota API Key Anda sedang habis (bisa kuota harian atau batas per menit). Kuota harian di akun gratis reset sekitar pukul 14.00 WIB; batas per menit cukup ditunggu 1 menit. Jangan klik berulang-ulang karena percobaan yang gagal bisa ikut terhitung. Anda juga bisa mencoba model lain di Pengaturan API Key.';
+    } else if(/overloaded|UNAVAILABLE|high demand|503/i.test(friendly)){
+      friendly = 'Server AI sedang penuh/sibuk (banyak yang menggunakan bersamaan). Ini bukan masalah di API Key atau aplikasi Anda — silakan tunggu 10-15 menit lalu coba satu kali saja. Jangan klik berulang-ulang karena percobaan yang gagal bisa ikut terhitung ke kuota harian. Anda juga bisa mencoba model lain di Pengaturan API Key.';
     } else if(/network|fetch/i.test(friendly)){
       friendly = 'Gagal terhubung ke server Gemini. Periksa koneksi internet Anda.';
     } else if(/not found|NOT_FOUND|404/i.test(friendly)){
-      friendly = 'Model AI yang digunakan sudah tidak tersedia/dipensiunkan oleh Google. Aplikasi perlu diperbarui ke model terbaru.';
+      friendly = 'Model AI yang dipilih sudah tidak tersedia/dipensiunkan oleh Google. Silakan pilih model lain di Pengaturan API Key.';
     }
     alert('Gagal membuat dokumen:\n' + friendly);
   } finally {
@@ -1238,7 +1370,7 @@ function copyText(){
 }
 
 // ---------- GENERATE FILE .DOCX ASLI (docx.js) ----------
-function parseInlineRunsDocx(text, forceBold=false){
+function parseInlineRunsDocx(text, forceBold=false, warnaTeks=null){
   const { TextRun, ExternalHyperlink } = docx;
   // Pecah dulu berdasarkan link markdown [teks](url) atau link polos, baru proses bold di tiap segmen teks biasa
   const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<]+)/g;
@@ -1251,20 +1383,20 @@ function parseInlineRunsDocx(text, forceBold=false){
     lastIndex = linkRegex.lastIndex;
   }
   if(lastIndex < text.length){ segments.push({ type:'text', value: text.slice(lastIndex) }); }
-  if(segments.length === 0) return [new TextRun({ text: '', bold: forceBold })];
+  if(segments.length === 0) return [new TextRun({ text: '', bold: forceBold, color: warnaTeks || undefined })];
 
   const runs = [];
   segments.forEach(seg=>{
     if(seg.type === 'link'){
       runs.push(new ExternalHyperlink({
-        children: [ new TextRun({ text: seg.label, color: '2B5DAA', underline: {} }) ],
+        children: [ new TextRun({ text: seg.label, color: warnaTeks || '2B5DAA', underline: {} }) ],
         link: seg.url,
       }));
     } else {
       const parts = seg.value.split(/(\*\*.+?\*\*)/g).filter(p=>p!=='');
       parts.forEach(p=>{
-        if(/^\*\*(.+)\*\*$/.test(p)){ runs.push(new TextRun({ text: p.replace(/^\*\*|\*\*$/g,''), bold:true })); }
-        else { runs.push(new TextRun({ text: p, bold: forceBold })); }
+        if(/^\*\*(.+)\*\*$/.test(p)){ runs.push(new TextRun({ text: p.replace(/^\*\*|\*\*$/g,''), bold:true, color: warnaTeks || undefined })); }
+        else { runs.push(new TextRun({ text: p, bold: forceBold, color: warnaTeks || undefined })); }
       });
     }
   });
@@ -1327,12 +1459,19 @@ async function downloadWord(){
       if(!tableBuffer.length){ inTable=false; return; }
       const headerCells = tableBuffer[0];
       const bodyRows = tableBuffer.length > 2 ? tableBuffer.slice(2) : tableBuffer.slice(1);
-      const rows = [ new TableRow({ children: headerCells.map(c=> new TableCell({
-        shading: { fill: 'EFE9D8' },
-        children: [ new Paragraph({ children: parseInlineRunsDocx(c, true) }) ],
+      const garisTabel = { style: BorderStyle.SINGLE, size: 4, color: 'AAAAAA' };
+      const borderSel = { top: garisTabel, bottom: garisTabel, left: garisTabel, right: garisTabel };
+      const rows = [ new TableRow({ tableHeader: true, children: headerCells.map(c=> new TableCell({
+        shading: { fill: '1D3F73' },
+        borders: borderSel,
+        margins: { top: 80, bottom: 80, left: 100, right: 100 },
+        children: [ new Paragraph({ children: parseInlineRunsDocx(c, true, 'FFFFFF') }) ],
       })) }) ];
-      bodyRows.forEach(cells=>{
+      bodyRows.forEach((cells, ri)=>{
         rows.push(new TableRow({ children: cells.map(c=> new TableCell({
+          shading: { fill: ri % 2 === 0 ? 'FFFFFF' : 'F3EFE4' },
+          borders: borderSel,
+          margins: { top: 80, bottom: 80, left: 100, right: 100 },
           children: [ new Paragraph({ children: parseInlineRunsDocx(c) }) ],
         })) }));
       });
