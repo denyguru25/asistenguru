@@ -271,6 +271,23 @@
         <textarea id="karakterMurid" rows="3" placeholder="Contoh: Sebagian besar siswa sudah paham konsep dasar X tapi belum bisa Y. Minat tinggi ke kegiatan praktik langsung. Gaya belajar dominan visual/kinestetik.&#10;(Kosongkan jika belum sempat asesmen awal — AI akan buatkan asumsi umum yang wajar)" class="mt-1 w-full border border-[color:var(--line)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--chalk-blue)]/30 focus:border-[color:var(--chalk-blue)] bg-white resize-none"></textarea>
       </div>
 
+      <!-- Asesmen Awal (opsional) -->
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="toggle-outer on" id="asesmenAwalToggle" onclick="toggleAsesmenAwal()"><div class="toggle-dot"></div></div>
+          <label class="text-sm text-slate-700 cursor-pointer" onclick="toggleAsesmenAwal()">Sertakan asesmen awal</label>
+        </div>
+        <p id="asesmenAwalNote" class="text-[11px] text-slate-400 mt-1.5">Biasanya dilakukan di awal bab/materi baru. Matikan jika ini RPM lanjutan dari bab yang sama.</p>
+        <div id="asesmenAwalJumlahWrap" class="mt-2.5">
+          <label class="text-[11px] text-slate-500">Jumlah soal pilihan ganda singkat (tingkat mudah &amp; sedang)</label>
+          <select id="asesmenAwalJumlah" class="mt-1 w-full sm:w-72 border border-[color:var(--line)] rounded-lg px-3 py-2 text-sm bg-white">
+            <option value="10" selected>10 soal (&plusmn; 15 menit)</option>
+            <option value="5">5 soal (&plusmn; 10 menit)</option>
+          </select>
+          <p class="text-[11px] text-slate-400 mt-1">Kalau Pertemuan 1 hanya 1 JP (35 menit), disarankan 5 soal.</p>
+        </div>
+      </div>
+
       <!-- Kerangka Pembelajaran Mendalam -->
       <div>
         <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2.5">Kerangka Pembelajaran Mendalam (4 Pilar)</p>
@@ -622,6 +639,16 @@ function toggleDigitalTersedia(){
   toggle.classList.toggle('on');
   const tersedia = toggle.classList.contains('on');
   document.getElementById('digitalLinkWrap').classList.toggle('hidden', !tersedia);
+}
+
+function toggleAsesmenAwal(){
+  const toggle = document.getElementById('asesmenAwalToggle');
+  toggle.classList.toggle('on');
+  const aktif = toggle.classList.contains('on');
+  document.getElementById('asesmenAwalJumlahWrap').classList.toggle('hidden', !aktif);
+  document.getElementById('asesmenAwalNote').textContent = aktif
+    ? 'Biasanya dilakukan di awal bab/materi baru. Matikan jika ini RPM lanjutan dari bab yang sama.'
+    : 'Asesmen awal tidak dimasukkan, bagian C hanya berisi KKTP.';
 }
 
 // ---------- MODE JUMLAH SOAL (Total vs Per Jenis) ----------
@@ -989,6 +1016,28 @@ function petaTahapPerPertemuan(n){
     const jpArray = hitungJpPerPertemuan(parseInt(jp)||1, jumlahPertemuan);
     const petaTahap = petaTahapPerPertemuan(jumlahPertemuan);
 
+    // ---- Asesmen Awal (opsional) — semua angka dihitung kode, bukan AI ----
+    const asesmenAwalAktif = document.getElementById('asesmenAwalToggle').classList.contains('on');
+    const jumlahAA = parseInt(document.getElementById('asesmenAwalJumlah').value) || 10;
+    const menitAA = jumlahAA === 5 ? 10 : 15;
+    const opsiAA = kelasNumRPP <= 3 ? 3 : 4;
+    const labelOpsiAA = opsiAA === 3 ? 'A, B, C' : 'A, B, C, D';
+    const jadwalAA = asesmenAwalAktif ? buatJadwalKunciPG(jumlahAA, opsiAA) : [];
+    const jadwalAAText = jadwalAA.map((k,i)=>`Soal ${i+1} kunci ${k}`).join(', ');
+    const batasCukup = Math.ceil(jumlahAA * 0.5);
+    const batasSiap = Math.ceil(jumlahAA * 0.8);
+    const fmtRentang = (a,b)=> a === b ? `${a}` : `${a} sampai ${b}`;
+    const menitP1 = (jpArray[0] || 0) * 35;
+    let splitP1 = null;
+    if(asesmenAwalAktif){
+      const sisaP1 = menitP1 - menitAA;
+      let pembukaP1, penutupP1;
+      if(sisaP1 >= 75){ pembukaP1 = 15; penutupP1 = 10; }
+      else if(sisaP1 >= 40){ pembukaP1 = 10; penutupP1 = 10; }
+      else { pembukaP1 = 5; penutupP1 = 5; }
+      splitP1 = { pembuka: pembukaP1, penutup: penutupP1, inti: sisaP1 - pembukaP1 - penutupP1 };
+    }
+
     userPrompt += `JENIS DOKUMEN: RPM (Rencana Pembelajaran Mendalam), format resmi sesuai Permendikdasmen No. 1 Tahun 2026 tentang Standar Proses.\n`;
     userPrompt += `Jumlah Pertemuan: ${jumlahPertemuan}.\n`;
     userPrompt += `ALOKASI MENIT PER PERTEMUAN (SUDAH DIHITUNG SISTEM, WAJIB diikuti persis — total baris "Waktu" pada tabel tiap pertemuan HARUS PAS dengan angka ini, JANGAN dihitung ulang sendiri): ${jpArray.map((j,i)=>`Pertemuan ${i+1} = ${j} JP (${j*35} menit)`).join(', ')}.\n`;
@@ -1021,7 +1070,7 @@ function petaTahapPerPertemuan(n){
     userPrompt += `### 3. Pemahaman Bermakna\n`;
     userPrompt += `Satu kalimat "big idea" dari materi ini yang menghubungkan konsep dengan kehidupan nyata peserta didik.\n\n`;
     userPrompt += `### 4. Pertanyaan Pemantik\n`;
-    userPrompt += `1-2 pertanyaan pembuka yang memancing rasa ingin tahu, DAN sekaligus bisa dipakai sebagai instrumen Asesmen Formatif Awal di bagian C.\n\n`;
+    userPrompt += `1-2 pertanyaan pembuka yang memancing rasa ingin tahu peserta didik. Pertanyaan ini dilontarkan secara lisan pada kegiatan Pembuka Pertemuan 1 dan BUKAN instrumen asesmen (jangan menyebutnya sebagai asesmen).\n\n`;
     userPrompt += `### 5. Kerangka Pembelajaran Mendalam\n`;
     userPrompt += `(4 Pilar resmi — jelaskan PENERAPAN KONKRETNYA untuk materi ini, BUKAN sekadar menyebut nama pilarnya):\n`;
     userPrompt += `(a) Praktik Pedagogis: ${pedagogisText}\n`;
@@ -1038,15 +1087,28 @@ function petaTahapPerPertemuan(n){
       userPrompt += `\n`;
     }
 
-    userPrompt += `## C. Asesmen Formatif Awal dan KKTP\n`;
-    userPrompt += `Instrumen: gunakan Pertanyaan Pemantik di atas (bagian B.4) sebagai instrumen Asesmen Formatif Awal untuk mengecek kesiapan/pengalaman awal peserta didik SEBELUM masuk ke kegiatan inti pada Pertemuan 1.\n`;
+    if(asesmenAwalAktif){
+      userPrompt += `## C. Asesmen Awal dan KKTP\n`;
+      userPrompt += `Tulis bagian ini dengan label teks tebal (BUKAN heading) secara berurutan:\n`;
+      userPrompt += `**Tujuan dan Instrumen:** 1-2 kalimat yang menjelaskan bahwa asesmen awal ini mengukur kesiapan/pengetahuan prasyarat peserta didik (BUKAN pencapaian TP), berupa ${jumlahAA} soal pilihan ganda singkat tingkat mudah dan sedang yang soal beserta kunci jawabannya ada di bagian "Lampiran: Instrumen Asesmen Awal", dikerjakan sekitar ${menitAA} menit pada Pertemuan 1 setelah kegiatan Pembuka.\n`;
+      userPrompt += `**Tindak Lanjut Hasil:** sajikan sebagai TABEL MARKDOWN dengan baris header dan pemisah "---" PERSIS format ini: "| Kelompok | Jumlah Jawaban Benar | Tindak Lanjut Guru |" lalu "| --- | --- | --- |", diikuti 3 baris data dengan rentang yang SUDAH DIHITUNG SISTEM (WAJIB dipakai persis, jangan diubah): Perlu penguatan = ${fmtRentang(0, batasCukup-1)} benar; Cukup = ${fmtRentang(batasCukup, batasSiap-1)} benar; Siap pengayaan = ${fmtRentang(batasSiap, jumlahAA)} benar. Kolom "Tindak Lanjut Guru" harus konkret untuk materi "${materi}" (misalnya: penguatan prasyarat/miskonsepsi pada tahap Memahami untuk kelompok pertama, pembelajaran sesuai rencana untuk kelompok kedua, tantangan tambahan untuk kelompok ketiga). Rentang ini hanya untuk menentukan strategi pembelajaran, BUKAN nilai atau kriteria kelulusan.\n`;
+    } else {
+      userPrompt += `## C. Kriteria Ketercapaian Tujuan Pembelajaran (KKTP)\n`;
+      userPrompt += `Awali dengan SATU kalimat italic yang menyatakan bahwa asesmen awal untuk topik ini sudah dilaksanakan pada pertemuan/RPM sebelumnya dan hasilnya dipakai guru untuk menyesuaikan pembelajaran. JANGAN membuat soal atau instrumen asesmen awal di dokumen ini.\n`;
+    }
     userPrompt += `Kriteria Ketercapaian Tujuan Pembelajaran (KKTP): Susun sebagai BEBERAPA indikator/kriteria konkret (bukan 1 kalimat seperti TP) yang membuktikan TP tercapai — level indikatornya harus mengarah/setara level TP (bukan cuma level kesiapan dasar). Indikator BOLEH mencakup kemampuan pendukung di level kognitif lebih rendah dari TP sebagai tangga bukti. Gunakan format Rubrik Penilaian (4-5 kriteria) atau Indikator Asesmen (boleh gabungan). JANGAN gunakan angka mutlak (misal "75", "80") — gunakan deskripsi kemampuan atau interval nilai.\n`;
-    userPrompt += `Tambahkan 1 kalimat italic di akhir bagian ini yang menjelaskan bagaimana guru MEMANFAATKAN hasil Asesmen Formatif Awal untuk menyesuaikan intensitas penjelasan di tahap Memahami.\n\n`;
+    userPrompt += `\n`;
 
     userPrompt += `## D. Pengalaman Belajar (Kegiatan Pembelajaran)\n`;
     userPrompt += `Untuk SETIAP pertemuan, buat sub-heading "### Pertemuan N (X JP) — Tahap [nama tahap]" diikuti TABEL MARKDOWN 4 kolom dengan baris header dan pemisah "---" di awal, format PERSIS seperti ini: "| Tahap | Waktu | Kegiatan Guru dan Siswa | Media/Sumber |" lalu baris "| --- | --- | --- | --- |", baru diikuti baris-baris data.\n`;
     userPrompt += `Baris tabel WAJIB memuat minimal: Pembuka, 1-2 baris kegiatan Inti (boleh diberi label sesuai tahap, misal "Memahami (Inti 1)"), dan Penutup. Kolom Waktu dalam satuan menit, dan JUMLAH seluruh baris Waktu dalam satu tabel pertemuan HARUS PAS SAMA dengan total menit pertemuan itu (lihat alokasi menit per pertemuan yang sudah dihitung di atas) — JANGAN sampai lebih atau kurang.\n`;
     userPrompt += `Isi kolom "Kegiatan Guru dan Siswa" harus KONKRET dan REALISTIS untuk durasi yang dialokasikan (jangan menumpuk banyak aktivitas berbeda dalam waktu singkat). Kolom "Media/Sumber" isi sesuai Kerangka Pembelajaran Mendalam di atas.\n\n`;
+    if(asesmenAwalAktif){
+      userPrompt += `KHUSUS tabel Pertemuan 1, urutan baris WAJIB: (1) Pembuka, (2) Asesmen Awal, (3) Inti (satu atau dua baris sesuai tahap), (4) Penutup. Alokasi waktu Pertemuan 1 SUDAH DIHITUNG SISTEM dan WAJIB dipakai persis: Pembuka = ${splitP1.pembuka} menit; Asesmen Awal = ${menitAA} menit; total seluruh baris Inti = ${splitP1.inti} menit (boleh dipecah menjadi 1-2 baris yang jumlahnya tepat ${splitP1.inti} menit); Penutup = ${splitP1.penutup} menit. Total seluruhnya ${menitP1} menit.\n`;
+      userPrompt += `Isi baris Pembuka: salam, presensi, membangun motivasi/ice breaking, menyampaikan tujuan pembelajaran, dan melontarkan Pertanyaan Pemantik (bagian B.4) — di baris ini JANGAN menyebut kata "asesmen". Isi baris Asesmen Awal: peserta didik mengerjakan ${jumlahAA} soal pilihan ganda singkat dari Lampiran secara mandiri, guru memeriksa lalu mengelompokkan peserta didik sesuai tabel Tindak Lanjut di bagian C, dan hasilnya dipakai untuk menyesuaikan penjelasan pada tahap Memahami; kolom Media/Sumber diisi "Lembar soal asesmen awal (Lampiran)".\n\n`;
+    } else {
+      userPrompt += `Tabel Pertemuan 1 TIDAK memuat baris asesmen awal (urutan baris: Pembuka, Inti, Penutup). Di baris Pembuka JANGAN menyebut asesmen awal; cukup salam, presensi, motivasi, penyampaian tujuan, dan Pertanyaan Pemantik (bagian B.4).\n\n`;
+    }
 
     userPrompt += `## E. Asesmen Formatif Proses dan Sumatif\n`;
     userPrompt += `Tentukan bentuk Asesmen Formatif Proses (selama kegiatan, berbasis observasi/pemantauan) dan Asesmen Sumatif (penilaian akhir unit) yang BENAR-BENAR SELARAS dengan model pembelajaran (Praktik Pedagogis) dan level TP di atas — prinsip asesmen autentik/constructive alignment. Contoh: kalau model PjBL/PBL dan TP level Menganalisis/Mengevaluasi, gunakan portofolio/produk/presentasi/laporan analisis (BUKAN tes pilihan ganda sederhana). Sertakan rubrik penilaian sederhana untuk Asesmen Sumatif.\n\n`;
@@ -1055,7 +1117,19 @@ function petaTahapPerPertemuan(n){
     userPrompt += `Refleksi Peserta Didik: 1 kalimat arahan refleksi yang mengaitkan materi dengan pengalaman/lingkungan nyata peserta didik.\n`;
     userPrompt += `Refleksi Guru: 1 kalimat arahan evaluasi diri guru terhadap efektivitas pembelajaran ini.\n`;
     userPrompt += `Program Remedial dan Pengayaan: 2-3 kalimat singkat — remedial untuk yang belum mencapai KKTP, pengayaan untuk yang sudah mencapai.\n`;
-    userPrompt += `Lampiran: 1 kalimat referensi singkat, CONTOH: "LKPD untuk materi ini dapat digenerate terpisah menggunakan fitur LKPD pada aplikasi ini, dengan TP yang sama." JANGAN menulis LKPD lengkap.\n`;
+    userPrompt += `Referensi LKPD: 1 kalimat singkat, CONTOH: "LKPD untuk materi ini dapat digenerate terpisah menggunakan fitur LKPD pada aplikasi ini, dengan TP yang sama." JANGAN menulis LKPD lengkap.\n`;
+    if(asesmenAwalAktif){
+      userPrompt += `\n## Lampiran: Instrumen Asesmen Awal\n`;
+      userPrompt += `Buat ${jumlahAA} soal pilihan ganda singkat untuk asesmen awal materi "${materi}" (kelas ${kelas} SD). Ketentuan WAJIB:\n`;
+      userPrompt += `- Tingkat kesulitan hanya Mudah dan Sedang (kurang lebih seimbang, boleh lebih banyak yang mudah). JANGAN membuat soal sulit/HOTS.\n`;
+      userPrompt += `- Soal mengukur PENGETAHUAN PRASYARAT dan miskonsepsi umum yang berkaitan dengan materi ini, BUKAN materi baru yang belum pernah diajarkan kepada peserta didik.\n`;
+      userPrompt += `- Pengecoh (opsi salah) dibuat dari miskonsepsi atau kesalahan berpikir yang lazim, bukan opsi asal-asalan.\n`;
+      userPrompt += `- Setiap soal HANYA punya ${opsiAA} opsi (${labelOpsiAA}). Gunakan bahasa sederhana sesuai kelas ${kelas} SD.\n`;
+      userPrompt += `- Format penulisan: nomor "1." diikuti teks soal, lalu setiap opsi pada baris tersendiri diawali huruf kapital "A. ", "B. ", dst. Nomor soal berurutan 1 sampai ${jumlahAA}, TIDAK boleh mulai dari 1 lagi di tengah.\n`;
+      userPrompt += `- KUNCI JAWABAN SUDAH DITENTUKAN SISTEM (supaya sebarannya merata), WAJIB persis: ${jadwalAAText}. Susun soal dan opsi sedemikian rupa sehingga jawaban benar tepat berada di opsi yang ditentukan itu.\n`;
+      userPrompt += `- Setelah semua soal, tulis sub-heading "### Kunci Jawaban" lalu sajikan sebagai TABEL MARKDOWN dengan header dan pemisah "---" PERSIS: "| No | Kunci | Konsep/Miskonsepsi yang Diuji |" lalu "| --- | --- | --- |". Kunci di tabel HARUS sama persis dengan penentuan di atas. JANGAN menulis kunci jawaban sebagai daftar bernomor.\n`;
+      userPrompt += `- Di dalam bagian Lampiran ini JANGAN gunakan heading level 1 atau 2 lagi (cukup "###" bila perlu).\n`;
+    }
   } else if(selectedOutput === 'rangkuman'){
     userPrompt += `JENIS DOKUMEN: Rangkuman / Materi Ajar untuk dibagikan ke peserta didik dan dijadikan pegangan guru.\n`;
     userPrompt += `ATURAN FORMAT WAJIB: Kelima judul bagian di bawah ini HARUS ditulis PERSIS sebagai heading Markdown level 2 (diawali "## "), CONTOH: "## 1. Judul Materi & Pengantar". JANGAN tulis judul-judul ini sebagai teks bernomor biasa tanpa tanda "##".\n`;
@@ -1298,7 +1372,7 @@ async function generateContent(){
         contents: [
           { role: 'user', parts: parts }
         ],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 16384 }
+        generationConfig: { temperature: 0.7, maxOutputTokens: 32768 }
       })
     });
 
@@ -1458,7 +1532,7 @@ async function downloadWord(){
     function flushTable(){
       if(!tableBuffer.length){ inTable=false; return; }
       const headerCells = tableBuffer[0];
-      const bodyRows = tableBuffer.length > 2 ? tableBuffer.slice(2) : tableBuffer.slice(1);
+      const bodyRows = tableBuffer.slice(1); // baris pemisah (---) sudah dibuang saat membaca, jadi semua baris setelah header adalah data
       const garisTabel = { style: BorderStyle.SINGLE, size: 4, color: 'AAAAAA' };
       const borderSel = { top: garisTabel, bottom: garisTabel, left: garisTabel, right: garisTabel };
       const rows = [ new TableRow({ tableHeader: true, children: headerCells.map(c=> new TableCell({
